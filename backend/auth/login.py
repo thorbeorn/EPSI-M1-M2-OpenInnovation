@@ -1,10 +1,13 @@
-# auth/login.py
+import os
+
 from fastapi import APIRouter, HTTPException
 from datetime import timedelta
-from modules.auth import authenticate_user, create_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+from modules.auth_mod import authenticate_user, create_token
 from pydantic import BaseModel
-from bdd.jwt import add_refresh_token_db, add_access_token_db
+from bdd.auth_bdd import add_refresh_token_db, add_access_token_db
+from dotenv import load_dotenv
 
+load_dotenv()
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 class LoginRequest(BaseModel):
@@ -20,14 +23,14 @@ def login(login_request: LoginRequest):
 
     access_token = create_token(
         {"sub": f"{user["username"]},{login_request.device}"},
-        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        timedelta(minutes=int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES')))
     )
 
     refresh_token = create_token(
         {"sub": user["username"], "type": "refresh"},
-        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        timedelta(days=int(os.getenv('REFRESH_TOKEN_EXPIRE_DAYS')))
     )
-    add_refresh_token_db(refresh_token, user["username"], REFRESH_TOKEN_EXPIRE_DAYS)
+    add_refresh_token_db(refresh_token, user["username"], int(os.getenv('REFRESH_TOKEN_EXPIRE_DAYS')))
     add_access_token_db(refresh_token, access_token)
 
     return {

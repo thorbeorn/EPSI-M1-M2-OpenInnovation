@@ -1,12 +1,10 @@
-# modules/auth.py
-from jose import jwt, JWTError
+import os
+from jose import jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
 
-SECRET_KEY = "SUPER_SECRET_KEY"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+load_dotenv()
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
 fake_users_db = {
@@ -28,4 +26,4 @@ def authenticate_user(username: str, password: str):
 def create_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
     to_encode["exp"] = datetime.utcnow() + expires_delta
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, os.getenv('JWT_SECRET_KEY'), algorithm=os.getenv('ALGORITHM'))

@@ -1,8 +1,8 @@
 import sqlite3
 from datetime import datetime, timedelta
 
-def init_refresh_token_db():
-    DB_FILE = "bdd/refresh_tokens.db"
+def init_refresh_token_table():
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     conn.execute("PRAGMA foreign_keys = ON")
     c = conn.cursor()
@@ -12,7 +12,7 @@ def init_refresh_token_db():
     conn.close()
 
 def add_refresh_token_db(token: str, username: str, days_valid: int = 7):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     expires_at = datetime.utcnow() + timedelta(days=days_valid)
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -21,7 +21,7 @@ def add_refresh_token_db(token: str, username: str, days_valid: int = 7):
     conn.commit()
     conn.close()
 def add_access_token_db(token: str, access_token: str):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("INSERT INTO access_tokens(token, access_tokens) VALUES(?,?)",
@@ -30,7 +30,7 @@ def add_access_token_db(token: str, access_token: str):
     conn.close()
 
 def get_refresh_token(token: str):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT expires_at FROM refresh_tokens WHERE token=?", (token,))
@@ -38,7 +38,7 @@ def get_refresh_token(token: str):
     conn.close()
     return row
 def get_access_token(token: str):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("SELECT access_tokens FROM access_tokens WHERE access_tokens=?", (token,))
@@ -47,14 +47,14 @@ def get_access_token(token: str):
     return row
 
 def remove_refresh_token(token: str):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("DELETE FROM refresh_tokens WHERE token=?", (token,))
     conn.commit()
     conn.close()
 def remove_access_token(token: str):
-    DB_FILE = "bdd/refresh_tokens.db"
+    DB_FILE = "bdd/openinnovation.db"
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     c.execute("DELETE FROM access_tokens WHERE token=?", (token,))

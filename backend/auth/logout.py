@@ -1,7 +1,6 @@
-# auth/logout.py
 from pydantic import BaseModel
-from fastapi import APIRouter, Depends
-from bdd.jwt import remove_refresh_token, remove_access_token
+from fastapi import APIRouter
+from bdd.auth_bdd import remove_refresh_token, remove_access_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
