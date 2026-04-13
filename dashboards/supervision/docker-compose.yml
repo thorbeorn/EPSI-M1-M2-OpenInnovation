@@ -1,0 +1,58 @@
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:7.0-alpine-latest
+    restart: unless-stopped
+    environment:
+      DB_SERVER_HOST: postgres
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+    networks:
+      - mynodehost-network
+    depends_on:
+      - postgres
+
+  zabbix-frontend:
+    image: zabbix/zabbix-web-nginx-pgsql:7.0-alpine-latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_SERVER_HOST: postgres
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+      ZBX_SERVER_HOST: zabbix-server
+      PHP_TZ: Europe/Paris
+    networks:
+      - mynodehost-network
+    depends_on:
+      - zabbix-server
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent2:7.0-alpine-latest
+    restart: unless-stopped
+    environment:
+      ZBX_SERVER_HOST: zabbix-server
+    networks:
+      - mynodehost-network
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zabbix
+      POSTGRES_PASSWORD: zabbix
+      POSTGRES_DB: zabbix
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - mynodehost-network
+
+volumes:
+  postgres-data:
+
+networks:
+  mynodehost-network:
+    external: true
+    name: mynodehost-network
