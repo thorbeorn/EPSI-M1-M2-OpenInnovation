@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyNodeHost — Hébergez depuis chez vous</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="images/logo.png">
+  </head>
+<body>
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    MyNodeHost
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how">Comment ça marche</a></li>
+    <li><a href="#usecases">Usages</a></li>
+    <li><a href="#pricing">Tarifs</a></li>
+    <li><a href="#tech">Technologie</a></li>
+  </ul>
+  <a href="#pricing" class="nav-cta">Démarrer →</a>
+</nav>
+<section class="hero">
+  <canvas id="network"></canvas>
+  <div class="hero-content">
+    <div class="hero-badge">HÉBERGEMENT DÉCENTRALISÉ · NOUVELLE GÉNÉRATION</div>
+    <h1 class="hero-title">
+      Votre serveur.<br>
+      <span class="accent">Votre réseau.</span>
+      <span class="line2">Depuis chez vous.</span>
+    </h1>
+    <p class="hero-desc">
+      MyNodeHost transforme votre box internet en infrastructure d'hébergement professionnelle. 
+      Déployez sites, APIs et services sans ouvrir un seul port — votre mini-serveur, 
+      exposé au monde avec un vrai nom de domaine.
+    </p>
+    <div class="hero-actions">
+      <a href="#pricing" class="btn-primary">Commencer gratuitement</a>
+      <a href="#how" class="btn-ghost">Voir comment ça marche</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-val">0</div>
+      <div class="stat-label">port à ouvrir</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">&lt; 2min</div>
+      <div class="stat-label">installation</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val">∞</div>
+      <div class="stat-label">services exposés</div>
+    </div>
+  </div>
+</section>
+<section class="how" id="how">
+  <div class="section-inner">
+    <div class="section-tag reveal">// Comment ça marche</div>
+    <h2 class="section-title reveal">Simple comme bonjour,<br>puissant comme le cloud.</h2>
+    <p class="section-sub reveal">Quatre étapes. C'est tout ce qu'il faut pour avoir votre propre infrastructure d'hébergement opérationnelle.</p>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-icon">📦</div>
+        <h3>Installez l'app</h3>
+        <p>Téléchargez le client MyNodeHost sur votre PC, Raspberry Pi ou NAS. Compatible Windows, Linux, macOS.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-icon">🔌</div>
+        <h3>Connectez vos services</h3>
+        <p>Indiquez les ports locaux à exposer — votre app web, votre API, votre serveur de jeu. L'app fait le reste.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-icon">🌐</div>
+        <h3>Tunnel automatique</h3>
+        <p>Un tunnel chiffré s'établit vers nos serveurs. Aucun port à ouvrir sur votre routeur. Aucune configuration réseau.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-icon">🚀</div>
+        <h3>Votre domaine actif</h3>
+        <p>Votre service est accessible via <code style="color:var(--green);background:var(--green-glow);padding:2px 6px;border-radius:3px;font-size:0.8em">vous.mynodehost.io</code> ou votre propre domaine.</p>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="usecases" id="usecases">
+  <div class="section-inner">
+    <div class="section-tag reveal">// Vos usages</div>
+    <h2 class="section-title reveal">Une passerelle universelle<br>pour tous vos services.</h2>
+    <p class="section-sub reveal">Site perso ou infrastructure professionnelle — MyNodeHost s'adapte à chaque projet.</p>
+    <div class="cases-grid reveal">
+      <div class="case-card">
+        <div class="case-icon">🌍</div>
+        <h3>Sites & applications web</h3>
+        <p>Hébergez votre portfolio, blog, ou app Next.js directement depuis votre machine. Certificat SSL inclus.</p>
+        <span class="case-tag">HTTP · HTTPS</span>
+      </div>
+      <div class="case-card">
+        <div class="case-icon">⚙️</div>
+        <h3>APIs & microservices</h3>
+        <p>Exposez vos APIs REST ou GraphQL en production sans serveur cloud. Parfait pour le prototypage rapide.</p>
+        <span class="case-tag">REST · GraphQL · gRPC</span>
+      </div>
+      <div class="case-card">
+        <div class="case-icon">🎮</div>
+        <h3>Serveurs de jeu</h3>
+        <p>Minecraft, Valheim, Counter-Strike — hébergez votre serveur privé avec une IP stable et partagez-la en un clic.</p>
+        <span class="case-tag">TCP · UDP</span>
+      </div>
+      <div class="case-card">
+        <div class="case-icon">🤖</div>
+        <h3>Bots & automatisations</h3>
+        <p>Webhooks Discord, bots Telegram, automatisations n8n — recevez des événements externes sans VPS.</p>
+        <span class="case-tag">Webhooks · Events</span>
+      </div>
+      <div class="case-card">
+        <div class="case-icon">🏠</div>
+        <h3>Domotique & IoT</h3>
+        <p>Home Assistant, Jeedom, Grafana — accédez à votre maison intelligente depuis n'importe où, en toute sécurité.</p>
+        <span class="case-tag">IoT · MQTT</span>
+      </div>
+      <div class="case-card">
+        <div class="case-icon">💼</div>
+        <h3>Outils internes</h3>
+        <p>Exposez Nextcloud, Gitea ou votre dashboard privé à votre équipe avec accès contrôlé par IP ou token.</p>
+        <span class="case-tag">Privé · Équipe</span>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="pricing" id="pricing">
+  <div class="section-inner">
+    <div class="section-tag reveal">// Tarifs</div>
+    <h2 class="section-title reveal">Commencez gratuitement.<br>Évoluez quand vous êtes prêt.</h2>
+    <p class="section-sub reveal">Pas de carte bancaire requise pour démarrer. Pas de surprise sur la facture.</p>
+    <div class="plans reveal">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">0€ <span>/ mois</span></div>
+        <p class="plan-desc">Pour découvrir et tester vos premiers projets personnels.</p>
+        <ul class="plan-features">
+          <li>1 tunnel actif</li>
+          <li>Sous-domaine *.mynodehost.io</li>
+          <li>Bande passante 10 GB/mois</li>
+          <li>SSL automatique</li>
+          <li>HTTP/HTTPS uniquement</li>
+        </ul>
+        <a href="#" class="plan-btn outline">Créer un compte</a>
+      </div>
+      <div class="plan featured">
+        <div class="plan-badge">✦ POPULAIRE</div>
+        <div class="plan-name">Node</div>
+        <div class="plan-price">9€ <span>/ mois</span></div>
+        <p class="plan-desc">Pour les développeurs et makers qui hébergent sérieusement.</p>
+        <ul class="plan-features">
+          <li>5 tunnels simultanés</li>
+          <li>Domaine personnalisé inclus</li>
+          <li>Bande passante 200 GB/mois</li>
+          <li>TCP + UDP + HTTP</li>
+          <li>IP dédiée en option</li>
+          <li>Dashboard analytics</li>
+        </ul>
+        <a href="#" class="plan-btn filled">Démarrer — 9€/mois</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Cluster</div>
+        <div class="plan-price">29€ <span>/ mois</span></div>
+        <p class="plan-desc">Pour les équipes et projets à haute disponibilité.</p>
+        <ul class="plan-features">
+          <li>Tunnels illimités</li>
+          <li>IP dédiée incluse</li>
+          <li>Bande passante 1 TB/mois</li>
+          <li>Failover automatique</li>
+          <li>SLA 99.9% garanti</li>
+          <li>Support prioritaire</li>
+        </ul>
+        <a href="#" class="plan-btn outline">Contacter l'équipe</a>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="tech" id="tech">
+  <div class="section-inner">
+    <div class="tech-inner">
+      <div>
+        <div class="section-tag reveal">// Sous le capot</div>
+        <h2 class="section-title reveal">Technologie de tunnel<br>éprouvée.</h2>
+        <p class="section-sub reveal" style="margin-bottom:32px;">Un tunnel TLS chiffré s'établit depuis votre machine vers nos serveurs d'edge. Vos données ne transitent jamais en clair — zéro configuration réseau, zéro risque d'exposition.</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px;" class="reveal">
+          <div style="display:flex;gap:16px;align-items:flex-start;">
+            <div style="width:6px;height:6px;background:var(--green);border-radius:50%;margin-top:7px;flex-shrink:0;box-shadow:0 0 8px var(--green);"></div>
+            <div>
+              <div style="font-family:var(--font-head);font-weight:700;font-size:0.9rem;margin-bottom:4px;">Connexion sortante uniquement</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">Votre client initie la connexion. Aucun port entrant requis. Fonctionne derrière tout type de NAT.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start;">
+            <div style="width:6px;height:6px;background:var(--green);border-radius:50%;margin-top:7px;flex-shrink:0;box-shadow:0 0 8px var(--green);"></div>
+            <div>
+              <div style="font-family:var(--font-head);font-weight:700;font-size:0.9rem;margin-bottom:4px;">Chiffrement TLS 1.3 bout-en-bout</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">Chaque tunnel est isolé et chiffré. Même nos serveurs ne peuvent pas lire le contenu.</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:flex-start;">
+            <div style="width:6px;height,background:var(--green);border-radius:50%;margin-top:7px;flex-shrink:0;box-shadow:0 0 8px var(--green);"></div>
+            <div style="width:6px;height:6px;background:var(--green);border-radius:50%;margin-top:7px;flex-shrink:0;box-shadow:0 0 8px var(--green);"></div>
+            <div>
+              <div style="font-family:var(--font-head);font-weight:700;font-size:0.9rem;margin-bottom:4px;">Reconnexion automatique</div>
+              <div style="font-size:0.82rem;color:var(--text-muted);">Le client surveille la connexion et se reconnecte instantanément en cas de coupure.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="terminal reveal">
+        <div class="terminal-bar">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-title">mynodehost — tunnel</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-comment"># Installation en une commande</span></div>
+          <div><span class="t-prompt">$ </span><span class="t-cmd">curl -fsSL install.mynodehost.io | sh</span></div>
+          <div><span class="t-out">✓ Client installé (v2.1.4)</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Authentification avec une clé</span></div>
+          <div><span class="t-prompt">$ </span><span class="t-cmd">mynode connect "votre_cle"</span></div>
+          <div><span class="t-out">✓ Authentification réussie</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Exposer votre app locale</span></div>
+          <div><span class="t-prompt">$ </span><span class="t-cmd">mynode expose 3000</span></div>
+          <div><span class="t-out">→ Tunnel établi</span></div>
+          <div><span class="t-green">✦ https://</span><span class="t-orange">alice</span><span class="t-green">.mynodehost.io</span></div>
+          <div><span class="t-out">→ SSL activé automatiquement</span></div>
+          <div><span class="t-out">→ En attente de connexions...</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">$ </span><span class="cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<footer>
+  <div class="footer-brand">
+    <h2>
+      <span class="nav-logo-dot"></span>
+      MyNodeHost
+    </h2>
+    <p>L'hébergement décentralisé qui vous remet les clés de votre infrastructure.</p>
+  </div>
+  <div class="footer-col">
+    <h4>Produit</h4>
+    <ul>
+      <li><a href="#how">Comment ça marche</a></li>
+      <li><a href="#pricing">Tarifs</a></li>
+      <li><a href="#">Documentation</a></li>
+      <li><a href="#">Changelog</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Ressources</h4>
+    <ul>
+      <li><a href="#">Guide de démarrage</a></li>
+      <li><a href="http://status.mynodehost.io/status">Status</a></li>
+    </ul>
+  </div>
+  <div class="footer-col">
+    <h4>Entreprise</h4>
+    <ul>
+      <li><a href="#">À propos</a></li>
+      <li><a href="#">Contact</a></li>
+      <li><a href="#">CGU & Confidentialité</a></li>
+    </ul>
+  </div>
+</footer>
+<div class="footer-bottom">
+  <p>© 2025 MyNodeHost. Tous droits réservés.</p>
+  <p>Fabriqué avec ♥ — hébergé sur nos propres nœuds, bien sûr.</p>
+</div>
+<script src="scripts.js"></script>
+</body>
+</html>

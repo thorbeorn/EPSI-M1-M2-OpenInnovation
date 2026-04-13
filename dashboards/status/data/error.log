@@ -1,0 +1,7 @@
+[2026-04-13 10:23:59] Error: Connection lost: The server closed the connection.
+    at Socket.<anonymous> (/app/node_modules/mysql2/lib/base/connection.js:113:31)
+    at Socket.emit (node:events:519:28)
+    at Pipe.<anonymous> (node:net:346:12) {
+  fatal: true,
+  code: 'PROTOCOL_CONNECTION_LOST'
+}

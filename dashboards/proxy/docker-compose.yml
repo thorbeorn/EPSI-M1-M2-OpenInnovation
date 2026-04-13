@@ -1,0 +1,14 @@
+services:
+  httpd:
+    image: httpd:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+    networks:
+      - mynodehost-network
+
+networks:
+  mynodehost-network:
+    external: true
+    name: mynodehost-network

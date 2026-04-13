@@ -1,0 +1,14 @@
+services:
+  mynodehost-vitrine:
+    build: .
+    container_name: mynodehost-vitrine
+    restart: unless-stopped
+    environment:
+      - PORT=3000
+    networks:
+      - mynodehost-network
+    
+networks:
+  mynodehost-network:
+    external: true
+    name: mynodehost-network
