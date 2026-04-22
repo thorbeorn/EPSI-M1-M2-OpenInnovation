@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNodeHost — Panel Client</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Mono', monospace; }
+.panel { background: #080c0a; color: #e8f0eb; min-height: 100vh; font-size: 13px; }
+
+/* TOPBAR */
+.topbar { background: #0d1410; border-bottom: 1px solid rgba(26,255,110,0.12); padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.topbar-logo { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; color: #e8f0eb; font-family: 'Syne', sans-serif; }
+.dot { width: 8px; height: 8px; background: #1aff6e; border-radius: 50%; box-shadow: 0 0 8px #1aff6e; animation: pulse 2s infinite; flex-shrink: 0; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.plan-badge { background: rgba(26,255,110,0.1); border: 1px solid rgba(26,255,110,0.25); color: #1aff6e; padding: 4px 12px; border-radius: 100px; font-size: 11px; letter-spacing: 0.08em; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(26,255,110,0.15); border: 1px solid rgba(26,255,110,0.3); display: flex; align-items: center; justify-content: center; font-size: 11px; color: #1aff6e; }
+.notif-btn { position: relative; background: transparent; border: none; cursor: pointer; color: #6a8070; font-size: 15px; padding: 4px; transition: color 0.15s; }
+.notif-btn:hover { color: #1aff6e; }
+.notif-badge { position: absolute; top: 0; right: 0; width: 8px; height: 8px; background: #ffb347; border-radius: 50%; border: 1px solid #080c0a; }
+
+/* LAYOUT */
+.layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 51px); }
+.sidebar { background: #0a0f0c; border-right: 1px solid rgba(26,255,110,0.08); padding: 20px 0; position: sticky; top: 51px; height: calc(100vh - 51px); overflow-y: auto; }
+.sidebar-section { padding: 8px 16px 4px; font-size: 10px; color: #3a4f42; letter-spacing: 0.12em; text-transform: uppercase; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; color: #6a8070; font-size: 12px; transition: all 0.15s; border-left: 2px solid transparent; }
+.nav-item:hover { color: #e8f0eb; background: rgba(26,255,110,0.04); }
+.nav-item.active { color: #1aff6e; border-left-color: #1aff6e; background: rgba(26,255,110,0.06); }
+.nav-icon { width: 14px; text-align: center; font-size: 12px; }
+.sidebar-divider { border: none; border-top: 1px solid rgba(26,255,110,0.08); margin: 12px 0; }
+.main { padding: 28px; overflow: auto; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* TYPOGRAPHY */
+.page-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 4px; color: #e8f0eb; }
+.page-sub { color: #6a8070; font-size: 12px; margin-bottom: 24px; }
+
+/* STATS */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+.stat-card { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; padding: 16px; }
+.stat-label { font-size: 10px; color: #6a8070; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: #1aff6e; letter-spacing: -0.04em; line-height: 1; }
+.stat-val.dim { color: #e8f0eb; }
+.stat-sub { font-size: 10px; color: #3a4f42; margin-top: 4px; }
+
+/* SECTION HEADERS */
+.section-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.section-hdr h2 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: #e8f0eb; }
+.tag { font-size: 10px; color: #1aff6e; background: rgba(26,255,110,0.1); border: 1px solid rgba(26,255,110,0.2); padding: 3px 10px; border-radius: 100px; letter-spacing: 0.05em; }
+.tag.amber { color: #ffb347; background: rgba(255,179,71,0.1); border-color: rgba(255,179,71,0.2); }
+.tag.red { color: #ff5050; background: rgba(255,80,80,0.1); border-color: rgba(255,80,80,0.2); }
+
+/* IP BLOCKS */
+.ip-block { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+.ip-block-hdr { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(26,255,110,0.08); cursor: pointer; }
+.ip-block-hdr:hover { background: rgba(26,255,110,0.04); }
+.ip-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: #1aff6e; letter-spacing: -0.02em; }
+.ip-meta { display: flex; align-items: center; gap: 12px; }
+.badge-shared { font-size: 10px; background: rgba(255,179,71,0.12); color: #ffb347; border: 1px solid rgba(255,179,71,0.25); padding: 3px 10px; border-radius: 100px; }
+.badge-dedicated { font-size: 10px; background: rgba(26,255,110,0.1); color: #1aff6e; border: 1px solid rgba(26,255,110,0.25); padding: 3px 10px; border-radius: 100px; }
+.badge-custom { font-size: 10px; background: rgba(120,80,255,0.1); color: #a680ff; border: 1px solid rgba(120,80,255,0.25); padding: 3px 10px; border-radius: 100px; }
+.badge-err { font-size: 10px; background: rgba(255,80,80,0.1); color: #ff5050; border: 1px solid rgba(255,80,80,0.25); padding: 3px 10px; border-radius: 100px; }
+.chevron { color: #3a4f42; font-size: 11px; transition: transform 0.2s; }
+.chevron.open { transform: rotate(90deg); }
+.ip-body { padding: 0 18px 14px; }
+
+/* IP WARNING BANNER */
+.ip-warning { display: flex; align-items: center; gap: 8px; background: rgba(255,179,71,0.06); border: 1px solid rgba(255,179,71,0.18); border-radius: 7px; padding: 8px 12px; margin: 10px 0 4px; font-size: 11px; color: #ffb347; }
+.ip-warning span { color: #6a8070; }
+
+/* PORT ROWS */
+.col-hdrs { display: grid; grid-template-columns: 100px 1fr 100px 80px auto; gap: 12px; }
+.col-hdr { font-size: 10px; color: #3a4f42; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 0 6px; }
+.port-row { display: grid; grid-template-columns: 100px 1fr 100px 80px auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(26,255,110,0.05); }
+.port-row:last-child { border-bottom: none; }
+.port-pill { font-size: 11px; color: #1aff6e; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.2); padding: 3px 10px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; display: inline-flex; align-items: center; gap: 4px; }
+.device-chip { display: flex; align-items: center; gap: 8px; }
+.device-icon { width: 24px; height: 24px; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.15); border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+.device-name { font-size: 12px; color: #e8f0eb; }
+.device-id { font-size: 10px; color: #6a8070; font-family: 'IBM Plex Mono', monospace; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.online { background: #1aff6e; box-shadow: 0 0 6px #1aff6e; }
+.status-dot.offline { background: #3a4f42; }
+.status-dot.idle { background: #ffb347; }
+.status-dot.err { background: #ff5050; box-shadow: 0 0 6px #ff5050; }
+.proto-tag { font-size: 10px; color: #6a8070; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 2px 8px; border-radius: 3px; }
+.detail-btn { font-size: 10px; cursor: pointer; padding: 4px 8px; border: 1px solid rgba(26,255,110,0.1); border-radius: 4px; background: transparent; color: #6a8070; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; }
+.detail-btn:hover { color: #1aff6e; border-color: rgba(26,255,110,0.3); background: rgba(26,255,110,0.05); }
+.tunnel-actions { display: flex; gap: 4px; }
+.pause-btn { font-size: 10px; cursor: pointer; padding: 4px 8px; border: 1px solid rgba(255,179,71,0.2); border-radius: 4px; background: transparent; color: #6a8070; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; }
+.pause-btn:hover { color: #ffb347; border-color: rgba(255,179,71,0.4); background: rgba(255,179,71,0.05); }
+.pause-btn.paused { color: #ffb347; border-color: rgba(255,179,71,0.4); background: rgba(255,179,71,0.08); }
+
+/* DEVICE DRAWER */
+.device-drawer { background: #080c0a; border: 1px solid rgba(26,255,110,0.12); border-radius: 8px; padding: 14px; margin-top: 6px; display: none; }
+.device-drawer.open { display: block; }
+.drow-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.drow-item label { font-size: 10px; color: #3a4f42; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 3px; }
+.drow-item span { font-size: 12px; color: #e8f0eb; }
+.drow-item span.green { color: #1aff6e; }
+.drow-item span.purple { color: #a680ff; }
+
+/* SPARKLINE */
+.sparkline-wrap { margin-top: 10px; }
+.sparkline-wrap label { font-size: 10px; color: #3a4f42; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 5px; }
+.sparkline-row { display: flex; gap: 2px; align-items: flex-end; height: 28px; }
+.sparkline-bar { width: 6px; background: rgba(26,255,110,0.25); border-radius: 1px 1px 0 0; transition: background 0.15s; }
+.sparkline-bar:hover { background: #1aff6e; }
+.sparkline-meta { display: flex; justify-content: space-between; font-size: 10px; color: #3a4f42; margin-top: 3px; }
+
+/* LATENCY BADGE */
+.latency-badge { font-size: 10px; padding: 2px 7px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
+.latency-badge.good { color: #1aff6e; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.2); }
+.latency-badge.mid { color: #ffb347; background: rgba(255,179,71,0.08); border: 1px solid rgba(255,179,71,0.2); }
+
+/* SERVICES */
+.services-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.svc-card { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; padding: 16px; display: flex; align-items: flex-start; gap: 14px; }
+.svc-icon { width: 36px; height: 36px; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.15); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.svc-info h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #e8f0eb; margin-bottom: 2px; }
+.svc-info .svc-url { font-size: 11px; color: #1aff6e; margin-bottom: 6px; word-break: break-all; }
+.svc-info .svc-meta { font-size: 11px; color: #6a8070; display: flex; gap: 10px; flex-wrap: wrap; }
+.svc-status { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.traffic-bar { background: rgba(26,255,110,0.08); border-radius: 3px; height: 4px; width: 80px; margin-top: 4px; }
+.traffic-fill { background: #1aff6e; height: 100%; border-radius: 3px; }
+
+/* ACCOUNT */
+.account-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.acct-card { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; padding: 20px; margin-bottom: 0; }
+.acct-card h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; margin-bottom: 14px; color: #e8f0eb; }
+.acct-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(26,255,110,0.06); font-size: 12px; }
+.acct-row:last-child { border-bottom: none; }
+.acct-row .k { color: #6a8070; }
+.acct-row .v { color: #e8f0eb; }
+.acct-row .v.green { color: #1aff6e; }
+.progress-wrap { background: rgba(26,255,110,0.08); border-radius: 3px; height: 5px; margin: 6px 0; }
+.progress { background: #1aff6e; height: 100%; border-radius: 3px; }
+.progress.warn { background: #ffb347; }
+.btn-outline { border: 1px solid rgba(26,255,110,0.25); background: transparent; color: #1aff6e; padding: 8px 16px; border-radius: 5px; font-size: 12px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; transition: all 0.15s; margin-top: 12px; display: inline-block; }
+.btn-outline:hover { background: rgba(26,255,110,0.08); }
+.btn-outline.amber { border-color: rgba(255,179,71,0.3); color: #ffb347; }
+.btn-outline.amber:hover { background: rgba(255,179,71,0.06); }
+
+/* TOGGLE */
+.toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid rgba(26,255,110,0.06); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 12px; color: #e8f0eb; }
+.toggle-desc { font-size: 10px; color: #3a4f42; margin-top: 1px; }
+.toggle { width: 36px; height: 20px; border-radius: 10px; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.2); position: relative; cursor: pointer; transition: all 0.2s; flex-shrink: 0; }
+.toggle.on { background: rgba(26,255,110,0.2); border-color: rgba(26,255,110,0.5); }
+.toggle::after { content: ''; width: 12px; height: 12px; border-radius: 50%; background: #3a4f42; position: absolute; top: 3px; left: 3px; transition: all 0.2s; }
+.toggle.on::after { background: #1aff6e; transform: translateX(16px); box-shadow: 0 0 6px rgba(26,255,110,0.5); }
+
+/* NOTIFICATIONS */
+.notif-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(26,255,110,0.06); align-items: flex-start; }
+.notif-item:last-child { border-bottom: none; }
+.notif-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.notif-icon.green { background: rgba(26,255,110,0.1); border: 1px solid rgba(26,255,110,0.2); }
+.notif-icon.amber { background: rgba(255,179,71,0.1); border: 1px solid rgba(255,179,71,0.2); }
+.notif-icon.red { background: rgba(255,80,80,0.1); border: 1px solid rgba(255,80,80,0.2); }
+.notif-body { flex: 1; }
+.notif-title { font-size: 12px; color: #e8f0eb; margin-bottom: 2px; }
+.notif-meta { font-size: 10px; color: #3a4f42; }
+
+/* HISTORY */
+.hist-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.hist-table th { text-align: left; font-size: 10px; color: #3a4f42; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 0 8px; border-bottom: 1px solid rgba(26,255,110,0.08); }
+.hist-table td { padding: 8px 0; border-bottom: 1px solid rgba(26,255,110,0.04); color: #6a8070; vertical-align: middle; }
+.hist-table td:first-child { color: #e8f0eb; }
+.hist-status { font-size: 10px; padding: 2px 8px; border-radius: 3px; }
+.hist-status.ok { color: #1aff6e; background: rgba(26,255,110,0.08); }
+.hist-status.drop { color: #ff5050; background: rgba(255,80,80,0.08); }
+
+/* STATUS PORTAL */
+.status-portal-card { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; padding: 20px; margin-bottom: 12px; }
+.status-portal-card h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #e8f0eb; margin-bottom: 4px; }
+.portal-url { font-size: 11px; color: #1aff6e; margin-bottom: 14px; }
+.svc-status-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid rgba(26,255,110,0.05); font-size: 11px; }
+.svc-status-row:last-child { border-bottom: none; }
+.uptime-pill { font-size: 10px; padding: 2px 8px; border-radius: 3px; color: #1aff6e; background: rgba(26,255,110,0.08); }
+
+/* ALLOWLIST */
+.allowlist-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(26,255,110,0.05); font-size: 12px; }
+.allowlist-row:last-child { border-bottom: none; }
+.ip-chip { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #1aff6e; background: rgba(26,255,110,0.06); border: 1px solid rgba(26,255,110,0.15); padding: 3px 8px; border-radius: 4px; }
+.remove-btn { font-size: 10px; color: #3a4f42; cursor: pointer; background: transparent; border: none; font-family: 'IBM Plex Mono', monospace; padding: 3px 6px; border-radius: 3px; transition: all 0.15s; }
+.remove-btn:hover { color: #ff5050; background: rgba(255,80,80,0.06); }
+.add-ip-row { display: flex; gap: 8px; margin-top: 12px; }
+.input-mono { background: #080c0a; border: 1px solid rgba(26,255,110,0.15); border-radius: 5px; padding: 7px 12px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; color: #e8f0eb; flex: 1; outline: none; transition: border-color 0.15s; }
+.input-mono:focus { border-color: rgba(26,255,110,0.35); }
+.input-mono.err { border-color: rgba(255,80,80,0.4); }
+select.input-mono { padding: 6px 10px; cursor: pointer; }
+.btn-sm { border: 1px solid rgba(26,255,110,0.25); background: transparent; color: #1aff6e; padding: 7px 14px; border-radius: 5px; font-size: 11px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; transition: all 0.15s; white-space: nowrap; }
+.btn-sm:hover { background: rgba(26,255,110,0.08); }
+.btn-sm.danger { border-color: rgba(255,80,80,0.25); color: #ff5050; }
+.btn-sm.danger:hover { background: rgba(255,80,80,0.06); }
+.btn-sm.amber { border-color: rgba(255,179,71,0.25); color: #ffb347; }
+.btn-sm.amber:hover { background: rgba(255,179,71,0.06); }
+.btn-sm.purple { border-color: rgba(120,80,255,0.25); color: #a680ff; }
+.btn-sm.purple:hover { background: rgba(120,80,255,0.06); }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(8,12,10,0.85); z-index: 200; align-items: center; justify-content: center; }
+.modal-overlay.open { display: flex; }
+.modal { background: #0d1410; border: 1px solid rgba(26,255,110,0.2); border-radius: 12px; padding: 24px; width: 480px; max-width: 90vw; max-height: 80vh; overflow-y: auto; }
+.modal h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+.modal p { font-size: 12px; color: #6a8070; margin-bottom: 12px; }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.btn-cancel { border: 1px solid rgba(255,255,255,0.1); background: transparent; color: #6a8070; padding: 7px 14px; border-radius: 5px; font-size: 11px; cursor: pointer; font-family: 'IBM Plex Mono', monospace; }
+.btn-cancel:hover { color: #e8f0eb; }
+
+/* MISC */
+.info-note { font-size: 11px; color: #3a4f42; background: rgba(26,255,110,0.03); border: 1px solid rgba(26,255,110,0.07); border-radius: 6px; padding: 8px 12px; margin-top: 10px; line-height: 1.5; }
+.info-note .hl { color: #6a8070; }
+.warn-note { font-size: 11px; color: #8a6040; background: rgba(255,179,71,0.04); border: 1px solid rgba(255,179,71,0.12); border-radius: 6px; padding: 8px 12px; margin-top: 10px; line-height: 1.5; }
+.warn-note .hl { color: #ffb347; }
+
+/* DNS SPECIFICS */
+.dns-record-row { display: grid; grid-template-columns: auto 1fr 1fr 90px 100px auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(26,255,110,0.05); }
+.dns-record-row:last-child { border-bottom: none; }
+.dns-record-hdr { display: grid; grid-template-columns: auto 1fr 1fr 90px 100px auto; gap: 10px; padding: 8px 0 6px; }
+.type-pill { font-size: 10px; padding: 2px 8px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; background: rgba(26,255,110,0.08); color: #1aff6e; border: 1px solid rgba(26,255,110,0.2); }
+.type-pill.cname { background: rgba(120,80,255,0.08); color: #a680ff; border-color: rgba(120,80,255,0.2); }
+.type-pill.ns { background: rgba(255,179,71,0.08); color: #ffb347; border-color: rgba(255,179,71,0.2); }
+.type-pill.txt { background: rgba(80,160,255,0.08); color: #50a0ff; border-color: rgba(80,160,255,0.2); }
+.host-chip { font-size: 12px; color: #e8f0eb; font-family: 'IBM Plex Mono', monospace; }
+.host-chip .subdomain { color: #1aff6e; }
+.val-chip { font-size: 11px; color: #6a8070; font-family: 'IBM Plex Mono', monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sync-badge { font-size: 10px; padding: 2px 8px; border-radius: 3px; }
+.sync-badge.ok { color: #1aff6e; background: rgba(26,255,110,0.08); border: 1px solid rgba(26,255,110,0.2); }
+.sync-badge.pending { color: #ffb347; background: rgba(255,179,71,0.08); border: 1px solid rgba(255,179,71,0.2); }
+.sync-badge.err { color: #ff5050; background: rgba(255,80,80,0.08); border: 1px solid rgba(255,80,80,0.2); }
+.sync-badge.managed { color: #a680ff; background: rgba(120,80,255,0.08); border: 1px solid rgba(120,80,255,0.2); }
+.dns-auto-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #1aff6e; background: rgba(26,255,110,0.06); border: 1px solid rgba(26,255,110,0.15); padding: 2px 8px; border-radius: 3px; }
+.dns-auto-badge.purple { color: #a680ff; background: rgba(120,80,255,0.06); border-color: rgba(120,80,255,0.15); }
+.domain-block { background: #0d1410; border: 1px solid rgba(26,255,110,0.12); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+.domain-block-hdr { padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(26,255,110,0.08); cursor: pointer; }
+.domain-block-hdr:hover { background: rgba(26,255,110,0.03); }
+.form-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 120px; }
+.form-label { font-size: 10px; color: #3a4f42; text-transform: uppercase; letter-spacing: 0.08em; }
+.ns-box { background: #080c0a; border: 1px solid rgba(26,255,110,0.1); border-radius: 6px; padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #1aff6e; margin-bottom: 10px; }
+.steps { counter-reset: step; display: flex; flex-direction: column; gap: 10px; }
+.step { display: flex; gap: 10px; align-items: flex-start; font-size: 12px; color: #6a8070; }
+.step::before { counter-increment: step; content: counter(step); width: 20px; height: 20px; border-radius: 50%; background: rgba(26,255,110,0.1); border: 1px solid rgba(26,255,110,0.2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: #1aff6e; flex-shrink: 0; margin-top: 1px; }
+.step .hl { color: #e8f0eb; }
+.tunnel-sel { display: flex; gap: 6px; flex-wrap: wrap; }
+.tunnel-chip { font-size: 11px; padding: 4px 10px; border: 1px solid rgba(26,255,110,0.15); border-radius: 4px; cursor: pointer; color: #6a8070; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; background: transparent; }
+.tunnel-chip:hover, .tunnel-chip.sel { border-color: rgba(26,255,110,0.4); color: #1aff6e; background: rgba(26,255,110,0.06); }
+.copy-val { cursor: pointer; color: #3a4f42; font-size: 11px; padding: 2px 5px; border: 1px solid transparent; border-radius: 3px; transition: all 0.15s; font-family: 'IBM Plex Mono', monospace; background: transparent; }
+.copy-val:hover { color: #1aff6e; border-color: rgba(26,255,110,0.2); }
+.action-bar { display: flex; gap: 6px; }
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid rgba(26,255,110,0.1); margin-bottom: 20px; }
+.tab { padding: 8px 16px; font-size: 12px; color: #6a8070; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; margin-bottom: -1px; }
+.tab:hover { color: #e8f0eb; }
+.tab.active { color: #1aff6e; border-bottom-color: #1aff6e; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="panel">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="dot"></div>
+    MyNodeHost
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">✦ NODE</span>
+    <button class="notif-btn" onclick="showPage('notifs', this)" title="Notifications">
+      🔔
+      <span class="notif-badge"></span>
+    </button>
+    <div class="avatar">AL</div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-section">Navigation</div>
+    <div class="nav-item active" onclick="showPage('ips', this)">
+      <span class="nav-icon">⬡</span> IP & Ports
+    </div>
+    <div class="nav-item" onclick="showPage('services', this)">
+      <span class="nav-icon">⚡</span> Services actifs
+    </div>
+    <div class="nav-item" onclick="showPage('devices', this)">
+      <span class="nav-icon">◈</span> Appareils
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section">DNS</div>
+    <div class="nav-item" onclick="showPage('dns', this)">
+      <span class="nav-icon">◎</span> Gestion DNS
+    </div>
+    <div class="nav-item" onclick="showPage('delegation', this)">
+      <span class="nav-icon">⬢</span> Délégation DNS
+    </div>
+    <div class="nav-item" onclick="showPage('custom', this)">
+      <span class="nav-icon">↗</span> Domaines perso
+    </div>
+    <hr class="sidebar-divider">
+    <div class="sidebar-section">Compte</div>
+    <div class="nav-item" onclick="showPage('account', this)">
+      <span class="nav-icon">◉</span> Mon compte
+    </div>
+    <div class="nav-item" onclick="showPage('notifs', this)">
+      <span class="nav-icon">◐</span> Notifications
+    </div>
+    <div class="nav-item" onclick="showPage('history', this)">
+      <span class="nav-icon">▦</span> Historique
+    </div>
+    <div class="nav-item" onclick="showPage('allowlist', this)">
+      <span class="nav-icon">⊕</span> Accès IP
+    </div>
+    <div class="nav-item" onclick="showPage('status', this)">
+      <span class="nav-icon">◐</span> Portail statut
+    </div>
+    <hr class="sidebar-divider">
+    <div class="nav-item">
+      <span class="nav-icon">↗</span> Documentation
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">○</span> Support
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ==================== PAGE: IPs & PORTS ==================== -->
+    <div class="page active" id="page-ips">
+      <div class="page-title">IP & Ports</div>
+      <div class="page-sub">Vos adresses IP, leurs ports et les appareils associés à chaque tunnel.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">IP dédiées</div><div class="stat-val">1</div><div class="stat-sub">sur 1 incluse</div></div>
+        <div class="stat-card"><div class="stat-label">IP partagées</div><div class="stat-val">2</div><div class="stat-sub">ports alloués sur pool commun</div></div>
+        <div class="stat-card"><div class="stat-label">Ports actifs</div><div class="stat-val dim">7</div><div class="stat-sub">sur 5 tunnels</div></div>
+        <div class="stat-card"><div class="stat-label">Appareils</div><div class="stat-val dim">4</div><div class="stat-sub">connectés</div></div>
+      </div>
+      <div class="section-hdr"><h2>// IP dédiées</h2><span class="tag">1 allouée</span></div>
+      <div class="ip-block">
+        <div class="ip-block-hdr" onclick="toggleBlock(this)">
+          <div>
+            <div class="ip-title">203.0.113.42</div>
+            <div style="font-size:11px;color:#6a8070;margin-top:2px;">Dédiée — IP exclusive à votre compte · 2 ports · 2 appareils</div>
+          </div>
+          <div class="ip-meta">
+            <span class="badge-dedicated">DÉDIÉE</span>
+            <div class="status-dot online"></div>
+            <span class="chevron open">▶</span>
+          </div>
+        </div>
+        <div class="ip-body">
+          <div class="info-note">ℹ️ <span class="hl">IP dédiée</span> — Cette adresse vous est réservée en permanence. Plusieurs appareils peuvent l'utiliser simultanément sur des ports distincts. L'IP reste la même entre les redémarrages de tunnels.</div>
+          <div class="col-hdrs" style="margin-top:12px;">
+            <div class="col-hdr">Port</div><div class="col-hdr">Appareil</div><div class="col-hdr">Protocole</div><div class="col-hdr">Latence</div><div class="col-hdr"></div>
+          </div>
+          <div class="port-row">
+            <div><span class="port-pill">:443</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">🖥</div><div><div class="device-name">serveur-prod</div><div class="device-id">dev_a1b2c3</div></div></div>
+            <div><span class="proto-tag">HTTPS</span></div>
+            <div><span class="latency-badge good">12ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d1')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d1">
+            <div class="drow-grid">
+              <div class="drow-item"><label>ID appareil</label><span>dev_a1b2c3</span></div>
+              <div class="drow-item"><label>IP réelle</label><span>192.168.1.12</span></div>
+              <div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div>
+              <div class="drow-item"><label>Type</label><span>Serveur Linux</span></div>
+              <div class="drow-item"><label>OS</label><span>Ubuntu 24.04</span></div>
+              <div class="drow-item"><label>Connecté depuis</label><span>3j 14h</span></div>
+            </div>
+            <div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d1"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div>
+          </div>
+          <div class="port-row">
+            <div><span class="port-pill">:80</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">🍓</div><div><div class="device-name">rpi-home</div><div class="device-id">dev_x9y8z7</div></div></div>
+            <div><span class="proto-tag">HTTP</span></div>
+            <div><span class="latency-badge good">8ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d1b')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d1b">
+            <div class="drow-grid">
+              <div class="drow-item"><label>ID appareil</label><span>dev_x9y8z7</span></div>
+              <div class="drow-item"><label>IP réelle</label><span>192.168.1.34</span></div>
+              <div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div>
+              <div class="drow-item"><label>Type</label><span>Raspberry Pi 5</span></div>
+              <div class="drow-item"><label>OS</label><span>Raspberry Pi OS</span></div>
+              <div class="drow-item"><label>Connecté depuis</label><span>2j 7h</span></div>
+            </div>
+            <div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d1b"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="section-hdr" style="margin-top:8px;"><h2>// IP partagées</h2><span class="tag">2 allouées</span></div>
+      <div class="ip-block">
+        <div class="ip-block-hdr" onclick="toggleBlock(this)">
+          <div><div class="ip-title">198.51.100.7</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">Partagée — 3 ports alloués à votre compte sur cette IP · 3 appareils</div></div>
+          <div class="ip-meta"><span class="badge-shared">PARTAGÉE</span><div class="status-dot online"></div><span class="chevron open">▶</span></div>
+        </div>
+        <div class="ip-body">
+          <div class="ip-warning">⚠ <strong>IP partagée entre plusieurs clients.</strong> <span>Chaque port vous est attribué exclusivement. Si vous redémarrez un tunnel, vous pourriez obtenir une IP différente depuis notre pool.</span></div>
+          <div class="col-hdrs" style="margin-top:4px;"><div class="col-hdr">Port</div><div class="col-hdr">Appareil</div><div class="col-hdr">Protocole</div><div class="col-hdr">Latence</div><div class="col-hdr"></div></div>
+          <div class="port-row">
+            <div><span class="port-pill">:8080</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">🍓</div><div><div class="device-name">rpi-home</div><div class="device-id">dev_x9y8z7</div></div></div>
+            <div><span class="proto-tag">HTTP</span></div><div><span class="latency-badge good">18ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d2')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d2"><div class="drow-grid"><div class="drow-item"><label>ID appareil</label><span>dev_x9y8z7</span></div><div class="drow-item"><label>IP réelle</label><span>192.168.1.34</span></div><div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>Type</label><span>Raspberry Pi 5</span></div><div class="drow-item"><label>OS</label><span>Raspberry Pi OS</span></div><div class="drow-item"><label>Connecté depuis</label><span>12j 2h</span></div></div><div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d2"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div></div>
+          <div class="port-row">
+            <div><span class="port-pill">:25565</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">💻</div><div><div class="device-name">gaming-pc</div><div class="device-id">dev_m3n4o5</div></div></div>
+            <div><span class="proto-tag">TCP</span></div><div><span class="latency-badge mid">34ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d3')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d3"><div class="drow-grid"><div class="drow-item"><label>ID appareil</label><span>dev_m3n4o5</span></div><div class="drow-item"><label>IP réelle</label><span>192.168.1.55</span></div><div class="drow-item"><label>Version client</label><span style="color:#ffb347">v2.0.9 ⚠</span></div><div class="drow-item"><label>Type</label><span>PC Windows</span></div><div class="drow-item"><label>OS</label><span>Windows 11</span></div><div class="drow-item"><label>Connecté depuis</label><span>0j 4h</span></div></div><div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d3"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div></div>
+          <div class="port-row">
+            <div><span class="port-pill">:1880</span></div>
+            <div class="device-chip"><div class="status-dot idle"></div><div class="device-icon">🍓</div><div><div class="device-name">rpi-home</div><div class="device-id">dev_x9y8z7</div></div></div>
+            <div><span class="proto-tag">HTTP</span></div><div><span class="latency-badge good">21ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d4')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d4"><div class="drow-grid"><div class="drow-item"><label>ID appareil</label><span>dev_x9y8z7</span></div><div class="drow-item"><label>IP réelle</label><span>192.168.1.34</span></div><div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>Type</label><span>Raspberry Pi 5</span></div><div class="drow-item"><label>Note</label><span style="color:#ffb347">Inactif 2h</span></div><div class="drow-item"><label>Connecté depuis</label><span>12j 2h</span></div></div><div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d4"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div></div>
+        </div>
+      </div>
+      <div class="ip-block">
+        <div class="ip-block-hdr" onclick="toggleBlock(this)">
+          <div><div class="ip-title">198.51.100.91</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">Partagée — 2 ports alloués à votre compte sur cette IP · 1 appareil</div></div>
+          <div class="ip-meta"><span class="badge-shared">PARTAGÉE</span><div class="status-dot online"></div><span class="chevron open">▶</span></div>
+        </div>
+        <div class="ip-body">
+          <div class="ip-warning">⚠ <strong>IP partagée entre plusieurs clients.</strong> <span>Chaque port vous est attribué exclusivement. Si vous redémarrez un tunnel, vous pourriez obtenir une IP différente depuis notre pool.</span></div>
+          <div class="col-hdrs" style="margin-top:4px;"><div class="col-hdr">Port</div><div class="col-hdr">Appareil</div><div class="col-hdr">Protocole</div><div class="col-hdr">Latence</div><div class="col-hdr"></div></div>
+          <div class="port-row">
+            <div><span class="port-pill">:51820</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">📦</div><div><div class="device-name">nas-synology</div><div class="device-id">dev_p6q7r8</div></div></div>
+            <div><span class="proto-tag">UDP</span></div><div><span class="latency-badge good">9ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d5')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d5"><div class="drow-grid"><div class="drow-item"><label>ID appareil</label><span>dev_p6q7r8</span></div><div class="drow-item"><label>IP réelle</label><span>192.168.1.100</span></div><div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>Type</label><span>NAS Synology</span></div><div class="drow-item"><label>OS</label><span>DSM 7.2</span></div><div class="drow-item"><label>Connecté depuis</label><span>30j 6h</span></div></div><div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d5"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div></div>
+          <div class="port-row">
+            <div><span class="port-pill">:5000</span></div>
+            <div class="device-chip"><div class="status-dot online"></div><div class="device-icon">📦</div><div><div class="device-name">nas-synology</div><div class="device-id">dev_p6q7r8</div></div></div>
+            <div><span class="proto-tag">HTTPS</span></div><div><span class="latency-badge good">11ms</span></div>
+            <div class="tunnel-actions"><button class="pause-btn" onclick="togglePause(this)">⏸</button><button class="detail-btn" onclick="toggleDrawer('d6')">Détails</button></div>
+          </div>
+          <div class="device-drawer" id="d6"><div class="drow-grid"><div class="drow-item"><label>ID appareil</label><span>dev_p6q7r8</span></div><div class="drow-item"><label>IP réelle</label><span>192.168.1.100</span></div><div class="drow-item"><label>Version client</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>Type</label><span>NAS Synology</span></div><div class="drow-item"><label>Service</label><span>Synology Drive</span></div><div class="drow-item"><label>Connecté depuis</label><span>30j 6h</span></div></div><div class="sparkline-wrap"><label>Bande passante — 24h</label><div class="sparkline-row" id="spark-d6"></div><div class="sparkline-meta"><span>-24h</span><span>maintenant</span></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: SERVICES ==================== -->
+    <div class="page" id="page-services">
+      <div class="page-title">Services actifs</div>
+      <div class="page-sub">Tous vos tunnels exposés et leur état en temps réel.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Tunnels actifs</div><div class="stat-val">5</div><div class="stat-sub">sur 5 inclus</div></div>
+        <div class="stat-card"><div class="stat-label">Bande passante</div><div class="stat-val dim">47 GB</div><div class="stat-sub">/ 200 GB ce mois</div></div>
+        <div class="stat-card"><div class="stat-label">Requêtes / 24h</div><div class="stat-val dim">14k</div><div class="stat-sub">↑ 12% vs hier</div></div>
+        <div class="stat-card"><div class="stat-label">Uptime moyen</div><div class="stat-val dim">99.8%</div><div class="stat-sub">30 derniers jours</div></div>
+      </div>
+      <div class="services-grid">
+        <div class="svc-card"><div class="svc-icon">🌍</div><div class="svc-info"><h3>Portfolio</h3><div class="svc-url">alice.mynodehost.io</div><div class="svc-meta"><span>203.0.113.42:443</span><span>·</span><span>HTTPS</span><span>·</span><span>serveur-prod</span></div><div class="traffic-bar"><div class="traffic-fill" style="width:23%"></div></div></div><div class="svc-status"><div class="status-dot online"></div></div></div>
+        <div class="svc-card"><div class="svc-icon">🍓</div><div class="svc-info"><h3>Home Assistant</h3><div class="svc-url">ha.alice.mynodehost.io</div><div class="svc-meta"><span>198.51.100.7:8080</span><span>·</span><span>HTTP</span><span>·</span><span>rpi-home</span></div><div class="traffic-bar"><div class="traffic-fill" style="width:8%"></div></div></div><div class="svc-status"><div class="status-dot online"></div></div></div>
+        <div class="svc-card"><div class="svc-icon">🎮</div><div class="svc-info"><h3>Serveur Minecraft</h3><div class="svc-url">mc.alice.mynodehost.io</div><div class="svc-meta"><span>198.51.100.7:25565</span><span>·</span><span>TCP</span><span>·</span><span>gaming-pc</span></div><div class="traffic-bar"><div class="traffic-fill" style="width:61%"></div></div></div><div class="svc-status"><div class="status-dot online"></div></div></div>
+        <div class="svc-card"><div class="svc-icon">⚙️</div><div class="svc-info"><h3>Node-RED</h3><div class="svc-url">nodered.alice.mynodehost.io</div><div class="svc-meta"><span>198.51.100.7:1880</span><span>·</span><span>HTTP</span><span>·</span><span>rpi-home</span></div><div class="traffic-bar"><div class="traffic-fill" style="width:2%"></div></div></div><div class="svc-status"><div class="status-dot idle"></div></div></div>
+        <div class="svc-card"><div class="svc-icon">📦</div><div class="svc-info"><h3>Synology Drive</h3><div class="svc-url">nas.alice.mynodehost.io</div><div class="svc-meta"><span>198.51.100.91:5000</span><span>·</span><span>HTTPS</span><span>·</span><span>nas-synology</span></div><div class="traffic-bar"><div class="traffic-fill" style="width:44%"></div></div></div><div class="svc-status"><div class="status-dot online"></div></div></div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: DEVICES ==================== -->
+    <div class="page" id="page-devices">
+      <div class="page-title">Appareils</div>
+      <div class="page-sub">Tous les appareils connectés à votre compte MyNodeHost.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Appareils</div><div class="stat-val">4</div><div class="stat-sub">connectés</div></div>
+        <div class="stat-card"><div class="stat-label">En ligne</div><div class="stat-val" style="color:#1aff6e">4</div><div class="stat-sub">actifs</div></div>
+        <div class="stat-card"><div class="stat-label">Version OK</div><div class="stat-val dim">3</div><div class="stat-sub">1 à mettre à jour</div></div>
+        <div class="stat-card"><div class="stat-label">Tunnels</div><div class="stat-val dim">7</div><div class="stat-sub">ports actifs</div></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="ip-block"><div class="ip-block-hdr" style="cursor:default;"><div class="device-chip"><div class="status-dot online"></div><div class="device-icon" style="width:32px;height:32px;font-size:16px;">🖥</div><div><div class="device-name" style="font-size:14px;">serveur-prod</div><div class="device-id">dev_a1b2c3 · Linux · v2.1.4</div></div></div><div class="ip-meta"><span class="tag">2 tunnels</span><span class="badge-dedicated">À JOUR</span></div></div><div class="ip-body"><div class="drow-grid"><div class="drow-item"><label>IP réelle</label><span>192.168.1.12</span></div><div class="drow-item"><label>OS</label><span>Ubuntu 24.04</span></div><div class="drow-item"><label>Version</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>IP publique</label><span>203.0.113.42</span></div><div class="drow-item"><label>Type</label><span>Serveur Linux</span></div><div class="drow-item"><label>Uptime tunnel</label><span>3j 14h</span></div></div></div></div>
+        <div class="ip-block"><div class="ip-block-hdr" style="cursor:default;"><div class="device-chip"><div class="status-dot online"></div><div class="device-icon" style="width:32px;height:32px;font-size:16px;">🍓</div><div><div class="device-name" style="font-size:14px;">rpi-home</div><div class="device-id">dev_x9y8z7 · Linux ARM · v2.1.4</div></div></div><div class="ip-meta"><span class="tag">3 tunnels</span><span class="badge-dedicated">À JOUR</span></div></div><div class="ip-body"><div class="drow-grid"><div class="drow-item"><label>IP réelle</label><span>192.168.1.34</span></div><div class="drow-item"><label>OS</label><span>Raspberry Pi OS</span></div><div class="drow-item"><label>Version</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>IP publique</label><span>203.0.113.42</span></div><div class="drow-item"><label>Type</label><span>Serveur Embarqué</span></div><div class="drow-item"><label>Uptime tunnel</label><span>12j 2h</span></div></div></div></div>
+        <div class="ip-block" style="border-color:rgba(255,179,71,0.25);"><div class="ip-block-hdr" style="cursor:default;"><div class="device-chip"><div class="status-dot online"></div><div class="device-icon" style="width:32px;height:32px;font-size:16px;">💻</div><div><div class="device-name" style="font-size:14px;">gaming-pc</div><div class="device-id">dev_m3n4o5 · Windows · v2.0.9</div></div></div><div class="ip-meta"><span class="tag">1 tunnel</span><span class="badge-shared">MISE À JOUR</span></div></div><div class="ip-body"><div class="drow-grid"><div class="drow-item"><label>IP réelle</label><span>192.168.1.55</span></div><div class="drow-item"><label>OS</label><span>Windows 11</span></div><div class="drow-item"><label>Version</label><span style="color:#ffb347">v2.0.9 ⚠</span></div><div class="drow-item"><label>IP publique</label><span>198.51.100.7</span></div><div class="drow-item"><label>Type</label><span>PC Windows</span></div><div class="drow-item"><label>Uptime tunnel</label><span>0j 4h</span></div></div></div></div>
+        <div class="ip-block"><div class="ip-block-hdr" style="cursor:default;"><div class="device-chip"><div class="status-dot online"></div><div class="device-icon" style="width:32px;height:32px;font-size:16px;">📦</div><div><div class="device-name" style="font-size:14px;">nas-synology</div><div class="device-id">dev_p6q7r8 · DSM · v2.1.4</div></div></div><div class="ip-meta"><span class="tag">2 tunnels</span><span class="badge-dedicated">À JOUR</span></div></div><div class="ip-body"><div class="drow-grid"><div class="drow-item"><label>IP réelle</label><span>192.168.1.100</span></div><div class="drow-item"><label>OS</label><span>DSM 7.2</span></div><div class="drow-item"><label>Version</label><span class="green">v2.1.4</span></div><div class="drow-item"><label>IP publique</label><span>198.51.100.91</span></div><div class="drow-item"><label>Type</label><span>NAS Synology</span></div><div class="drow-item"><label>Uptime tunnel</label><span>30j 6h</span></div></div></div></div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: DNS MANAGEMENT ==================== -->
+    <div class="page" id="page-dns">
+      <div class="page-title">Gestion DNS</div>
+      <div class="page-sub">Tous vos enregistrements DNS — sous-domaines MyNodeHost et domaines personnalisés. Mis à jour automatiquement lors des changements d'IP tunnel.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Sous-domaines</div><div class="stat-val">6</div><div class="stat-sub">mynodehost.io</div></div>
+        <div class="stat-card"><div class="stat-label">Domaines perso</div><div class="stat-val dim">2</div><div class="stat-sub">délégation active</div></div>
+        <div class="stat-card"><div class="stat-label">Auto-sync</div><div class="stat-val" style="color:#1aff6e">ON</div><div class="stat-sub">IP changée → DNS maj</div></div>
+        <div class="stat-card"><div class="stat-label">Prop. DNS</div><div class="stat-val dim">~30s</div><div class="stat-sub">temps moyen</div></div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab('dns','sub',this)">Sous-domaines MNH</div>
+        <div class="tab" onclick="switchTab('dns','custom',this)">Domaines personnalisés</div>
+        <div class="tab" onclick="switchTab('dns','all',this)">Tous les enregistrements</div>
+      </div>
+      <!-- TAB: sous-domaines -->
+      <div class="tab-content active" id="dns-tab-sub">
+        <div class="section-hdr">
+          <h2>// alice.mynodehost.io</h2>
+          <div style="display:flex;gap:8px"><span class="tag">Zone gérée automatiquement</span><button class="btn-sm" onclick="openModal('modal-addsub')">+ Nouveau sous-domaine</button></div>
+        </div>
+        <div class="domain-block">
+          <div class="domain-block-hdr" onclick="toggleDomain(this)">
+            <div><div class="ip-title">*.alice.mynodehost.io</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">Zone principale · 6 enregistrements · Auto-sync actif</div></div>
+            <div class="ip-meta"><span class="dns-auto-badge">⟳ AUTO-SYNC</span><span class="chevron open">▶</span></div>
+          </div>
+          <div class="ip-body">
+            <div class="dns-record-hdr"><div class="col-hdr">Type</div><div class="col-hdr">Hôte</div><div class="col-hdr">Valeur / Cible</div><div class="col-hdr">TTL</div><div class="col-hdr">Statut</div><div class="col-hdr"></div></div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">portfolio</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-portfolio">203.0.113.42</span><span class="dns-auto-badge" title="IP fixe dédiée">IP DÉDIÉE</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div>
+              <div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber" onclick="openEditRec('portfolio','203.0.113.42','A','dedicated')">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">ha</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-ha">198.51.100.7</span><span class="dns-auto-badge">AUTO-IP</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div>
+              <div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber" onclick="openEditRec('ha','198.51.100.7','A','shared')">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">mc</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-mc">198.51.100.7</span><span class="dns-auto-badge">AUTO-IP</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div>
+              <div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber" onclick="openEditRec('mc','198.51.100.7','A','shared')">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">nodered</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-nodered">198.51.100.7</span><span class="dns-auto-badge">AUTO-IP</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div>
+              <div><span class="sync-badge pending">⟳ En attente</span></div>
+              <div class="action-bar"><button class="btn-sm amber" onclick="openEditRec('nodered','198.51.100.7','A','shared')">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">nas</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-nas">198.51.100.91</span><span class="dns-auto-badge">AUTO-IP</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div>
+              <div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber" onclick="openEditRec('nas','198.51.100.91','A','shared')">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div>
+              <div><span class="host-chip"><span class="subdomain">status</span>.alice.mynodehost.io</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip">203.0.113.1</span><span class="dns-auto-badge">MNH INFRA</span></div>
+              <div><span style="font-size:11px;color:#6a8070">300s</span></div>
+              <div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm" disabled style="opacity:.4;cursor:default">Système</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="info-note" style="margin-bottom:16px">ℹ️ <span class="hl">Auto-sync :</span> quand un tunnel sur IP partagée redémarre et obtient une nouvelle IP, tous les enregistrements A liés à ce tunnel sont mis à jour automatiquement sous 30 secondes. Le TTL court (30s) garantit une propagation rapide.</div>
+        <!-- Simulation -->
+        <div class="acct-card" style="margin-bottom:0">
+          <h3>⟳ Simuler un changement d'IP tunnel</h3>
+          <p style="font-size:11px;color:#6a8070;margin-bottom:14px">Simulez ce qui se passe quand un tunnel partagé redémarre et obtient une nouvelle IP depuis notre pool.</p>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <div class="form-group" style="flex:none">
+              <div class="form-label">Tunnel simulé</div>
+              <select class="input-mono" id="sim-tunnel" style="width:auto">
+                <option value="ha:198.51.100.7">ha — 198.51.100.7:8080</option>
+                <option value="mc:198.51.100.7">mc — 198.51.100.7:25565</option>
+                <option value="nodered:198.51.100.7">nodered — 198.51.100.7:1880</option>
+                <option value="nas:198.51.100.91">nas — 198.51.100.91:5000</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:none">
+              <div class="form-label">Nouvelle IP assignée</div>
+              <select class="input-mono" id="sim-newip" style="width:auto">
+                <option>198.51.100.9</option><option>198.51.100.14</option><option>198.51.100.33</option><option>198.51.100.67</option>
+              </select>
+            </div>
+            <button class="btn-sm" style="margin-top:16px" onclick="simulateIPChange()">▶ Simuler</button>
+          </div>
+          <div id="sim-log" style="display:none;margin-top:14px;background:#080c0a;border:1px solid rgba(26,255,110,.1);border-radius:6px;padding:12px;font-family:'IBM Plex Mono',monospace;font-size:11px;line-height:1.8;color:#6a8070"></div>
+        </div>
+      </div>
+      <!-- TAB: domaines perso -->
+      <div class="tab-content" id="dns-tab-custom">
+        <div class="section-hdr">
+          <h2>// Domaines personnalisés pointant vers vos tunnels</h2>
+          <button class="btn-sm purple" onclick="openModal('modal-addcustom')">+ Ajouter un domaine</button>
+        </div>
+        <div class="domain-block">
+          <div class="domain-block-hdr" onclick="toggleDomain(this)">
+            <div><div class="ip-title">example.com</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">Délégation NS active · 3 enregistrements · Zone hébergée chez MNH</div></div>
+            <div class="ip-meta"><span class="badge-custom">DÉLÉGATION NS</span><span class="sync-badge ok" style="font-size:10px">✓ Vérifié</span><span class="chevron open">▶</span></div>
+          </div>
+          <div class="ip-body">
+            <div class="warn-note" style="margin-bottom:10px">⚠ <span class="hl">Délégation NS :</span> vous avez délégué la zone example.com à nos nameservers. Nous gérons tous les enregistrements DNS de ce domaine. Les changements d'IP tunnel sont répercutés automatiquement.</div>
+            <div class="dns-record-hdr"><div class="col-hdr">Type</div><div class="col-hdr">Hôte</div><div class="col-hdr">Valeur / Cible</div><div class="col-hdr">TTL</div><div class="col-hdr">Statut</div><div class="col-hdr"></div></div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div><div><span class="host-chip"><span class="subdomain">@</span> example.com</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip">203.0.113.42</span><span class="dns-auto-badge" title="IP fixe dédiée">IP DÉDIÉE</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div><div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill">A</span></div><div><span class="host-chip"><span class="subdomain">app</span>.example.com</span></div>
+              <div style="display:flex;align-items:center;gap:6px"><span class="val-chip" id="rec-app-ex">198.51.100.7</span><span class="dns-auto-badge">AUTO-IP</span></div>
+              <div><span style="font-size:11px;color:#6a8070">30s</span></div><div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill cname">CNAME</span></div><div><span class="host-chip"><span class="subdomain">www</span>.example.com</span></div>
+              <div><span class="val-chip">example.com</span></div>
+              <div><span style="font-size:11px;color:#6a8070">300s</span></div><div><span class="sync-badge ok">✓ Synchro</span></div>
+              <div class="action-bar"><button class="btn-sm amber">Éditer</button></div>
+            </div>
+            <div class="dns-record-row">
+              <div><span class="type-pill txt">TXT</span></div><div><span class="host-chip"><span class="subdomain">_acme-challenge</span>.example.com</span></div>
+              <div><span class="val-chip">abc123xyz_verification_token</span></div>
+              <div><span style="font-size:11px;color:#6a8070">60s</span></div><div><span class="sync-badge managed">⚙ Auto SSL</span></div>
+              <div class="action-bar"><button class="btn-sm" disabled style="opacity:.4;cursor:default">Système</button></div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn-sm" onclick="openModal('modal-addsub')">+ Enregistrement</button>
+              <button class="btn-sm purple" onclick="openModal('modal-ns')">⬢ Voir NS</button>
+              <button class="btn-sm danger">Supprimer le domaine</button>
+            </div>
+          </div>
+        </div>
+        <div class="domain-block">
+          <div class="domain-block-hdr" onclick="toggleDomain(this)">
+            <div><div class="ip-title">monblog.fr</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">CNAME vers tunnel · 1 enregistrement · Géré chez votre registrar</div></div>
+            <div class="ip-meta"><span class="badge-shared">CNAME</span><span class="sync-badge ok" style="font-size:10px">✓ Vérifié</span><span class="chevron open">▶</span></div>
+          </div>
+          <div class="ip-body">
+            <div class="info-note" style="margin-bottom:10px">ℹ️ <span class="hl">Mode CNAME :</span> votre domaine reste chez votre registrar. Il pointe via CNAME vers votre tunnel MNH. L'IP est gérée de notre côté — si elle change, votre domaine suit automatiquement.</div>
+            <div class="dns-record-hdr"><div class="col-hdr">Type</div><div class="col-hdr">Hôte</div><div class="col-hdr">Valeur / Cible</div><div class="col-hdr">TTL</div><div class="col-hdr">Statut</div><div class="col-hdr"></div></div>
+            <div class="dns-record-row">
+              <div><span class="type-pill cname">CNAME</span></div>
+              <div><span class="host-chip"><span class="subdomain">www</span>.monblog.fr <span style="color:#3a4f42;font-size:10px">(chez registrar)</span></span></div>
+              <div><span class="val-chip">portfolio.alice.mynodehost.io</span></div>
+              <div><span style="font-size:11px;color:#6a8070">60s</span></div><div><span class="sync-badge ok">✓ Actif</span></div>
+              <div class="action-bar"><button class="btn-sm amber">Détails</button></div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px">
+              <button class="btn-sm purple" onclick="openModal('modal-cname')">Guide CNAME</button>
+              <button class="btn-sm danger">Supprimer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- TAB: tous -->
+      <div class="tab-content" id="dns-tab-all">
+        <div class="info-note" style="margin-bottom:16px">Vue consolidée de tous vos enregistrements DNS actifs, toutes zones confondues.</div>
+        <div class="acct-card" style="padding:0;overflow:hidden;margin-bottom:0">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead><tr style="border-bottom:1px solid rgba(26,255,110,.1)">
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">Zone</th>
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">Hôte</th>
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">Type</th>
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">IP / Cible</th>
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">Tunnel</th>
+              <th style="text-align:left;font-size:10px;color:#3a4f42;letter-spacing:.08em;text-transform:uppercase;padding:12px 14px;font-weight:400">Statut</th>
+            </tr></thead>
+            <tbody id="all-records-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: DÉLÉGATION DNS ==================== -->
+    <div class="page" id="page-delegation">
+      <div class="page-title">Délégation DNS</div>
+      <div class="page-sub">Déléguez la gestion DNS de votre domaine à MyNodeHost pour un contrôle complet et une mise à jour automatique.</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Domaines délégués</div><div class="stat-val">1</div><div class="stat-sub">example.com</div></div>
+        <div class="stat-card"><div class="stat-label">NS actifs</div><div class="stat-val dim">2</div><div class="stat-sub">ns1 + ns2.mynodehost.io</div></div>
+        <div class="stat-card"><div class="stat-label">Propagation</div><div class="stat-val" style="color:#1aff6e">OK</div><div class="stat-sub">tous les resolvers</div></div>
+        <div class="stat-card"><div class="stat-label">DNSSEC</div><div class="stat-val dim">OFF</div><div class="stat-sub">disponible sur demande</div></div>
+      </div>
+      <div class="section-hdr"><h2>// Vos nameservers MyNodeHost</h2><button class="btn-sm purple" onclick="openModal('modal-delwiz')">+ Déléguer un domaine</button></div>
+      <div class="acct-card" style="margin-bottom:16px">
+        <h3>Nameservers à configurer chez votre registrar</h3>
+        <p style="font-size:11px;color:#6a8070;margin-bottom:14px">Remplacez les NS actuels de votre domaine par ceux-ci pour déléguer la zone DNS à MyNodeHost.</p>
+        <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns1.mynodehost.io</span><button class="copy-val" onclick="copyText('ns1.mynodehost.io',this)">📋 copier</button></div>
+        <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns2.mynodehost.io</span><button class="copy-val" onclick="copyText('ns2.mynodehost.io',this)">📋 copier</button></div>
+        <div class="info-note">ℹ️ La propagation NS peut prendre <span class="hl">de 15 min à 48h</span> selon votre registrar. Pendant ce temps, votre domaine reste résolu par les anciens NS. Aucune interruption de service n'est causée.</div>
+      </div>
+      <div class="section-hdr"><h2>// Domaines délégués actifs</h2></div>
+      <div class="domain-block">
+        <div class="domain-block-hdr" onclick="toggleDomain(this)">
+          <div><div class="ip-title">example.com</div><div style="font-size:11px;color:#6a8070;margin-top:2px;">Délégué le 2 avr. 2026 · 5 enregistrements · NS propagés</div></div>
+          <div class="ip-meta"><span class="badge-custom">NS DÉLÉGUÉS</span><span class="sync-badge ok">✓ Actif</span><span class="chevron open">▶</span></div>
+        </div>
+        <div class="ip-body">
+          <div class="drow-grid" style="margin-bottom:14px">
+            <div class="drow-item"><label>Registrar</label><span>Namecheap</span></div>
+            <div class="drow-item"><label>NS configurés</label><span class="green">ns1 + ns2.mynodehost.io</span></div>
+            <div class="drow-item"><label>Dernière vérif.</label><span>Il y a 5 min</span></div>
+            <div class="drow-item"><label>Enregistrements</label><span>5 actifs</span></div>
+            <div class="drow-item"><label>SSL auto</label><span class="green">Let's Encrypt ✓</span></div>
+            <div class="drow-item"><label>DNSSEC</label><span style="color:#3a4f42">Désactivé</span></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-sm" onclick="showPage('dns',document.querySelector('[onclick*=\'dns\']'))">Gérer les enregistrements →</button>
+            <button class="btn-sm purple">Vérifier propagation</button>
+            <button class="btn-sm danger">Retirer la délégation</button>
+          </div>
+        </div>
+      </div>
+      <div class="acct-card" style="margin-bottom:0">
+        <h3>Comment déléguer — guide rapide</h3>
+        <div class="steps">
+          <div class="step"><span>Connectez-vous à votre registrar (OVH, Namecheap, Gandi…) et accédez aux réglages DNS de votre domaine.</span></div>
+          <div class="step"><span>Remplacez les <span class="hl">nameservers actuels</span> par <code style="color:#1aff6e">ns1.mynodehost.io</code> et <code style="color:#1aff6e">ns2.mynodehost.io</code>.</span></div>
+          <div class="step"><span>Revenez ici et cliquez sur <span class="hl">Vérifier la délégation</span>. Nous détecterons automatiquement la propagation.</span></div>
+          <div class="step"><span>Une fois vérifié, <span class="hl">créez vos enregistrements</span> depuis la page DNS — chaque A record est lié à un tunnel et se met à jour si l'IP change.</span></div>
+          <div class="step"><span>Les certificats SSL <span class="hl">Let's Encrypt</span> sont générés et renouvelés automatiquement pour tous vos sous-domaines délégués.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: DOMAINES PERSO ==================== -->
+    <div class="page" id="page-custom">
+      <div class="page-title">Domaines personnalisés</div>
+      <div class="page-sub">Faites pointer votre propre domaine vers vos tunnels — par délégation NS complète ou simple CNAME.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div class="acct-card">
+          <h3>Mode A — Délégation NS complète</h3>
+          <div style="font-size:11px;color:#6a8070;margin-bottom:12px;line-height:1.6">Vous pointez les NS de votre domaine vers MNH. On gère toute la zone DNS. Idéal pour plusieurs sous-domaines, SSL auto, et mise à jour d'IP tunnel instantanée.</div>
+          <div class="drow-grid" style="margin-bottom:12px">
+            <div class="drow-item"><label>Contrôle</label><span class="green">Total</span></div>
+            <div class="drow-item"><label>SSL auto</label><span class="green">Oui</span></div>
+            <div class="drow-item"><label>Auto-sync IP</label><span class="green">Oui</span></div>
+          </div>
+          <button class="btn-sm purple" onclick="openModal('modal-delwiz')">Déléguer un domaine →</button>
+        </div>
+        <div class="acct-card">
+          <h3>Mode B — CNAME simple</h3>
+          <div style="font-size:11px;color:#6a8070;margin-bottom:12px;line-height:1.6">Votre domaine reste chez votre registrar. Vous créez un CNAME qui pointe vers votre sous-domaine MNH. L'IP tunnel est gérée par MNH et suit les changements automatiquement via le CNAME.</div>
+          <div class="drow-grid" style="margin-bottom:12px">
+            <div class="drow-item"><label>Contrôle</label><span style="color:#ffb347">Partiel</span></div>
+            <div class="drow-item"><label>SSL auto</label><span style="color:#ffb347">Limité</span></div>
+            <div class="drow-item"><label>Auto-sync IP</label><span class="green">Oui (via CNAME)</span></div>
+          </div>
+          <button class="btn-sm" onclick="openModal('modal-cname')">Guide CNAME →</button>
+        </div>
+      </div>
+      <div class="section-hdr"><h2>// Domaines configurés</h2><button class="btn-sm purple" onclick="openModal('modal-addcustom')">+ Ajouter</button></div>
+      <div class="domain-block"><div class="domain-block-hdr" style="cursor:default"><div><div class="ip-title">example.com</div><div style="font-size:11px;color:#6a8070;margin-top:2px">Délégation NS · 3 sous-domaines actifs · SSL ✓</div></div><div class="ip-meta"><span class="badge-custom">NS</span><span class="sync-badge ok">✓ Vérifié</span><button class="btn-sm" onclick="showPage('dns',null)" style="margin-left:4px">Enregistrements →</button></div></div></div>
+      <div class="domain-block"><div class="domain-block-hdr" style="cursor:default"><div><div class="ip-title">monblog.fr</div><div style="font-size:11px;color:#6a8070;margin-top:2px">CNAME → portfolio.alice.mynodehost.io · SSL via MNH</div></div><div class="ip-meta"><span class="badge-shared">CNAME</span><span class="sync-badge ok">✓ Actif</span><button class="btn-sm amber" style="margin-left:4px">Détails</button></div></div></div>
+    </div>
+
+    <!-- ==================== PAGE: ACCOUNT ==================== -->
+    <div class="page" id="page-account">
+      <div class="page-title">Mon compte</div>
+      <div class="page-sub">Informations de votre compte et état de votre abonnement.</div>
+      <div class="account-grid">
+        <div class="acct-card"><h3>Profil</h3><div class="acct-row"><span class="k">Nom</span><span class="v">Alice Lemoine</span></div><div class="acct-row"><span class="k">Email</span><span class="v">alice@example.com</span></div><div class="acct-row"><span class="k">Compte créé</span><span class="v">Jan 2025</span></div><div class="acct-row"><span class="k">Clé API</span><span class="v green">mnh_••••••••a3f9</span></div><button class="btn-outline">Modifier le profil</button></div>
+        <div class="acct-card"><h3>Abonnement Node</h3><div class="acct-row"><span class="k">Plan</span><span class="v green">✦ Node — 9€/mois</span></div><div class="acct-row"><span class="k">Renouvellement</span><span class="v">14 mai 2026</span></div><div class="acct-row"><span class="k">Tunnels</span><span class="v">5 / 5 utilisés</span></div><div class="acct-row"><span class="k">IP dédiée</span><span class="v">203.0.113.42</span></div><button class="btn-outline">Passer à Cluster →</button></div>
+        <div class="acct-card"><h3>Bande passante</h3><div class="acct-row"><span class="k">Utilisée</span><span class="v">47 GB</span></div><div class="acct-row"><span class="k">Incluse</span><span class="v">200 GB</span></div><div class="progress-wrap"><div class="progress" style="width:23%"></div></div><div class="acct-row" style="margin-top:8px;"><span class="k">Réinitialisation</span><span class="v">dans 17 jours</span></div><div class="acct-row"><span class="k">Excédent</span><span class="v green">Aucun</span></div></div>
+        <div class="acct-card"><h3>Facturation</h3><div class="acct-row"><span class="k">Prochain paiement</span><span class="v">9,00 €</span></div><div class="acct-row"><span class="k">Mode</span><span class="v">Carte ••••4242</span></div><div class="acct-row"><span class="k">Dernière facture</span><span class="v">Avr. 2026</span></div><div class="acct-row"><span class="k">Statut</span><span class="v green">Payée</span></div><button class="btn-outline">Gérer la facturation</button></div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: NOTIFICATIONS ==================== -->
+    <div class="page" id="page-notifs">
+      <div class="page-title">Notifications</div>
+      <div class="page-sub">Alertes tunnel, déconnexions appareils et événements système.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="acct-card"><h3>Préférences d'alerte</h3>
+          <div class="toggle-row"><div><div class="toggle-label">Tunnel hors ligne</div><div class="toggle-desc">Email si un tunnel tombe inopinément</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Déconnexion appareil</div><div class="toggle-desc">Email si un appareil se déconnecte</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Webhook</div><div class="toggle-desc">POST JSON sur votre endpoint</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+          <div style="margin-top:12px;"><input class="input-mono" type="text" placeholder="https://hooks.example.com/mnh" style="width:100%;"><button class="btn-sm" style="margin-top:8px;width:100%;">Enregistrer le webhook</button></div>
+          <div class="toggle-row" style="margin-top:8px;"><div><div class="toggle-label">Mise à jour client disponible</div><div class="toggle-desc">Email si une nouvelle version sort</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row"><div><div class="toggle-label">Bande passante ≥ 80%</div><div class="toggle-desc">Alerte avant dépassement</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="acct-card"><h3>Alertes récentes</h3>
+          <div class="notif-item"><div class="notif-icon amber">⚠</div><div class="notif-body"><div class="notif-title">gaming-pc — Version client obsolète</div><div class="notif-meta">v2.0.9 détectée · il y a 2h · dev_m3n4o5</div></div></div>
+          <div class="notif-item"><div class="notif-icon red">↓</div><div class="notif-body"><div class="notif-title">Tunnel rpi-home:1880 — Inactif</div><div class="notif-meta">Aucun trafic depuis 2h · 198.51.100.7:1880</div></div></div>
+          <div class="notif-item"><div class="notif-icon green">✓</div><div class="notif-body"><div class="notif-title">nas-synology — Reconnecté</div><div class="notif-meta">Tunnel rétabli · il y a 3j · 198.51.100.91:5000</div></div></div>
+          <div class="notif-item"><div class="notif-icon amber">↻</div><div class="notif-body"><div class="notif-title">nas-synology — Nouvelle IP assignée</div><div class="notif-meta">IP partagée changée après redémarrage · il y a 3j</div></div></div>
+          <div class="notif-item"><div class="notif-icon green">↑</div><div class="notif-body"><div class="notif-title">serveur-prod — Mis à jour v2.1.4</div><div class="notif-meta">Client à jour · il y a 5j · dev_a1b2c3</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: HISTORY ==================== -->
+    <div class="page" id="page-history">
+      <div class="page-title">Historique connexions</div>
+      <div class="page-sub">Journal des connexions et événements tunnel par appareil.</div>
+      <div class="acct-card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <h3>Journal — 30 derniers jours</h3>
+          <div style="display:flex;gap:8px;"><select class="input-mono" style="width:auto;padding:5px 10px;font-size:11px;"><option>Tous les appareils</option><option>serveur-prod</option><option>rpi-home</option><option>gaming-pc</option><option>nas-synology</option></select><button class="btn-sm">Exporter CSV</button></div>
+        </div>
+        <table class="hist-table">
+          <thead><tr><th>Appareil</th><th>Événement</th><th>IP publique</th><th>IP réelle</th><th>Date / heure</th><th>Statut</th></tr></thead>
+          <tbody>
+            <tr><td>gaming-pc</td><td>Connexion tunnel :25565</td><td>198.51.100.7</td><td>192.168.1.55</td><td>Auj. 09:14</td><td><span class="hist-status ok">Actif</span></td></tr>
+            <tr><td>nas-synology</td><td>Reconnexion après chute</td><td>198.51.100.91</td><td>192.168.1.100</td><td>10 avr. 03:22</td><td><span class="hist-status ok">Actif</span></td></tr>
+            <tr><td>nas-synology</td><td>Tunnel coupé (timeout)</td><td>198.51.100.84 <span style="color:#3a4f42;font-size:10px;">ancien</span></td><td>192.168.1.100</td><td>10 avr. 03:18</td><td><span class="hist-status drop">Coupé</span></td></tr>
+            <tr><td>rpi-home</td><td>Connexion tunnel :1880</td><td>198.51.100.7</td><td>192.168.1.34</td><td>1 avr. 11:02</td><td><span class="hist-status ok">Actif</span></td></tr>
+            <tr><td>serveur-prod</td><td>Connexion tunnel :443</td><td>203.0.113.42</td><td>192.168.1.12</td><td>9 avr. 22:51</td><td><span class="hist-status ok">Actif</span></td></tr>
+            <tr><td>rpi-home</td><td>Tunnel coupé</td><td>198.51.100.7</td><td>192.168.1.34</td><td>8 avr. 14:30</td><td><span class="hist-status drop">Coupé</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="info-note">ℹ️ <span class="hl">À noter :</span> Pour les IP partagées, l'IP publique peut changer à chaque reconnexion de tunnel. L'historique conserve l'IP exacte utilisée à chaque session.</div>
+    </div>
+
+    <!-- ==================== PAGE: ALLOWLIST ==================== -->
+    <div class="page" id="page-allowlist">
+      <div class="page-title">Règles d'accès IP</div>
+      <div class="page-sub">Contrôlez quelles IPs sources peuvent accéder à vos tunnels — sans toucher à vos services.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="acct-card"><h3>Allowlist — Portfolio (203.0.113.42:443)</h3><div class="allowlist-row"><span class="ip-chip">0.0.0.0/0</span><span style="font-size:10px;color:#1aff6e;">Accès public</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="add-ip-row"><input class="input-mono" type="text" placeholder="IP ou CIDR ex: 82.64.0.0/16"><button class="btn-sm">+ Ajouter</button></div><div class="info-note" style="margin-top:10px;">Actuellement ouvert à tous. Ajoutez des règles pour restreindre l'accès.</div></div>
+        <div class="acct-card"><h3>Allowlist — Minecraft (198.51.100.7:25565)</h3><div class="allowlist-row"><span class="ip-chip">78.120.14.52</span><span style="font-size:10px;color:#6a8070;">Alice maison</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="allowlist-row"><span class="ip-chip">91.105.200.0/24</span><span style="font-size:10px;color:#6a8070;">Amis Lyon</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="allowlist-row"><span class="ip-chip">185.241.56.78</span><span style="font-size:10px;color:#6a8070;">VPN perso</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="add-ip-row"><input class="input-mono" type="text" placeholder="IP ou CIDR ex: 82.64.0.0/16"><button class="btn-sm">+ Ajouter</button></div></div>
+        <div class="acct-card"><h3>Allowlist — Home Assistant (198.51.100.7:8080)</h3><div class="allowlist-row"><span class="ip-chip">78.120.14.52</span><span style="font-size:10px;color:#6a8070;">Alice maison</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="allowlist-row"><span class="ip-chip">185.241.56.78</span><span style="font-size:10px;color:#6a8070;">VPN perso</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="add-ip-row"><input class="input-mono" type="text" placeholder="IP ou CIDR ex: 82.64.0.0/16"><button class="btn-sm">+ Ajouter</button></div></div>
+        <div class="acct-card"><h3>Allowlist — Synology Drive (198.51.100.91:5000)</h3><div class="allowlist-row"><span class="ip-chip">0.0.0.0/0</span><span style="font-size:10px;color:#1aff6e;">Accès public</span><button class="remove-btn" onclick="removeRow(this)">✕</button></div><div class="add-ip-row"><input class="input-mono" type="text" placeholder="IP ou CIDR ex: 82.64.0.0/16"><button class="btn-sm">+ Ajouter</button></div></div>
+      </div>
+      <div class="info-note" style="margin-top:6px;">ℹ️ Ces règles sont appliquées au niveau du tunnel MyNodeHost, <span class="hl">sans modifier votre service exposé</span>. Les connexions bloquées reçoivent un refus TCP avant même d'atteindre votre machine.</div>
+    </div>
+
+    <!-- ==================== PAGE: STATUS PORTAL ==================== -->
+    <div class="page" id="page-status">
+      <div class="page-title">Portail statut public</div>
+      <div class="page-sub">Pages de statut générées automatiquement pour vos services — partagez-les à vos utilisateurs.</div>
+      <div class="status-portal-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div><h3>Portail global — alice.mynodehost.io/status</h3><div class="portal-url">status.alice.mynodehost.io</div></div>
+          <div style="display:flex;gap:8px;align-items:center;"><div class="toggle on" onclick="this.classList.toggle('on')"></div><span style="font-size:11px;color:#6a8070;">Public</span></div>
+        </div>
+        <div class="svc-status-row"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot online"></div> Portfolio</div><span class="uptime-pill">99.9% / 30j</span></div>
+        <div class="svc-status-row"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot online"></div> Home Assistant</div><span class="uptime-pill">99.7% / 30j</span></div>
+        <div class="svc-status-row"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot online"></div> Serveur Minecraft</div><span class="uptime-pill">98.4% / 30j</span></div>
+        <div class="svc-status-row"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot idle"></div> Node-RED</div><span class="uptime-pill" style="color:#ffb347;background:rgba(255,179,71,0.08);border-color:rgba(255,179,71,0.2);">Inactif</span></div>
+        <div class="svc-status-row" style="border:none;"><div style="display:flex;align-items:center;gap:8px;"><div class="status-dot online"></div> Synology Drive</div><span class="uptime-pill">99.8% / 30j</span></div>
+        <div style="margin-top:14px;display:flex;gap:8px;"><button class="btn-sm" onclick="copyStatus()">📋 Copier le lien</button><button class="btn-sm">⚙ Personnaliser</button></div>
+      </div>
+      <div class="acct-card">
+        <h3>Portails par service</h3>
+        <div class="acct-row"><span class="k">Portfolio</span><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:11px;color:#1aff6e;">status.alice.mynodehost.io/portfolio</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></div>
+        <div class="acct-row"><span class="k">Minecraft</span><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:11px;color:#1aff6e;">status.alice.mynodehost.io/minecraft</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div></div>
+        <div class="acct-row"><span class="k">Synology Drive</span><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:11px;color:#1aff6e;">status.alice.mynodehost.io/nas</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div></div>
+        <div class="acct-row" style="border:none;"><span class="k">Home Assistant</span><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:11px;color:#3a4f42;">Désactivé</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div></div>
+        <div class="info-note">ℹ️ Chaque portail affiche l'uptime, les incidents et l'état en temps réel — <span class="hl">sans exposer votre IP ni vos détails techniques</span>.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- PAUSE MODAL -->
+<div class="modal-overlay" id="pause-modal">
+  <div class="modal">
+    <h3>⏸ Mettre le tunnel en pause</h3>
+    <p>Le tunnel sera suspendu mais sa configuration est conservée. Vous pourrez le réactiver à tout moment depuis ce panel.</p>
+    <p style="color:#ffb347;margin-top:8px;">⚠ Sur IP partagée, si vous redémarrez après une pause, une nouvelle IP pourra vous être assignée depuis le pool.</p>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closePauseModal()">Annuler</button><button class="btn-sm" onclick="confirmPause()">Confirmer la pause</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Add subdomain -->
+<div class="modal-overlay" id="modal-addsub">
+  <div class="modal">
+    <h3>+ Nouveau sous-domaine</h3>
+    <p>Créez un enregistrement DNS pointant vers l'un de vos tunnels.</p>
+    <div class="form-row">
+      <div class="form-group"><div class="form-label">Sous-domaine</div><input class="input-mono" type="text" placeholder="monapp" id="new-sub-name"></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:2px;color:#6a8070;font-size:13px">.alice.mynodehost.io</div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <div class="form-label">Lier au tunnel</div>
+      <div class="tunnel-sel">
+        <div class="tunnel-chip sel" onclick="selTunnel(this)">portfolio · :443 · 203.0.113.42</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">ha · :8080 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">mc · :25565 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">nodered · :1880 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">nas · :5000 · 198.51.100.91</div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <div class="form-label">TTL</div>
+      <select class="input-mono"><option>30s (recommandé pour IP partagées)</option><option>60s</option><option>300s (IP dédiées uniquement)</option></select>
+    </div>
+    <div class="info-note">ℹ️ L'enregistrement A sera automatiquement mis à jour si l'IP du tunnel change. Le TTL court (30s) garantit une propagation rapide.</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-addsub')">Annuler</button><button class="btn-sm" onclick="closeModal('modal-addsub')">Créer l'enregistrement</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Add custom domain -->
+<div class="modal-overlay" id="modal-addcustom">
+  <div class="modal">
+    <h3>+ Ajouter un domaine personnalisé</h3>
+    <p>Choisissez le mode d'intégration de votre domaine.</p>
+    <div class="form-group" style="margin-bottom:14px"><div class="form-label">Nom de domaine</div><input class="input-mono" type="text" placeholder="mondomaine.fr"></div>
+    <div class="form-group" style="margin-bottom:14px">
+      <div class="form-label">Mode d'intégration</div>
+      <select class="input-mono" id="custom-mode" onchange="updateCustomModeHint()">
+        <option value="ns">Délégation NS complète (recommandé)</option>
+        <option value="cname">CNAME simple (votre registrar garde le contrôle)</option>
+      </select>
+    </div>
+    <div id="custom-mode-hint-ns"><div class="info-note">Vous devrez changer vos NS chez votre registrar pour pointer vers <strong style="color:#1aff6e">ns1.mynodehost.io</strong> et <strong style="color:#1aff6e">ns2.mynodehost.io</strong>. Nous gérerons ensuite toute votre zone DNS et mettrons à jour les IPs automatiquement.</div></div>
+    <div id="custom-mode-hint-cname" style="display:none">
+      <div class="form-group" style="margin-top:12px;margin-bottom:8px"><div class="form-label">Tunnel cible</div><select class="input-mono"><option>portfolio.alice.mynodehost.io</option><option>ha.alice.mynodehost.io</option><option>mc.alice.mynodehost.io</option><option>nas.alice.mynodehost.io</option></select></div>
+      <div class="info-note">Créez chez votre registrar un enregistrement CNAME pointant vers le tunnel sélectionné. Si l'IP tunnel change, votre domaine suit automatiquement via la résolution CNAME.</div>
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-addcustom')">Annuler</button><button class="btn-sm purple" onclick="closeModal('modal-addcustom')">Continuer →</button></div>
+  </div>
+</div>
+
+<!-- MODAL: NS Panel -->
+<div class="modal-overlay" id="modal-ns">
+  <div class="modal">
+    <h3>⬢ Nameservers — example.com</h3>
+    <p>Configurez ces nameservers chez votre registrar pour déléguer la zone à MyNodeHost.</p>
+    <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns1.mynodehost.io</span><button class="copy-val" onclick="copyText('ns1.mynodehost.io',this)">📋</button></div>
+    <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns2.mynodehost.io</span><button class="copy-val" onclick="copyText('ns2.mynodehost.io',this)">📋</button></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:12px"><div class="status-dot online"></div><span style="font-size:12px;color:#1aff6e">NS propagés — tous les resolvers répondent correctement</span></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-ns')">Fermer</button><button class="btn-sm purple" onclick="closeModal('modal-ns')">Vérifier à nouveau</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Edit record -->
+<div class="modal-overlay" id="modal-editrec">
+  <div class="modal">
+    <h3 id="editrec-title">Éditer l'enregistrement</h3>
+    <p id="editrec-desc">Modifiez la cible de cet enregistrement DNS.</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <div class="form-label">Tunnel lié</div>
+      <div class="tunnel-sel" id="editrec-tunnels">
+        <div class="tunnel-chip" onclick="selTunnel(this)">portfolio · :443 · 203.0.113.42</div>
+        <div class="tunnel-chip sel" onclick="selTunnel(this)">ha · :8080 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">mc · :25565 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">nodered · :1880 · 198.51.100.7</div>
+        <div class="tunnel-chip" onclick="selTunnel(this)">nas · :5000 · 198.51.100.91</div>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px"><div class="form-label">TTL</div><select class="input-mono"><option>30s (recommandé — IP partagées)</option><option>60s</option><option>300s</option></select></div>
+    <div class="warn-note" id="editrec-warn" style="display:none">⚠ Ce tunnel utilise une <span class="hl">IP partagée</span>. L'enregistrement A sera mis à jour automatiquement si l'IP change lors d'un redémarrage. TTL court recommandé.</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-editrec')">Annuler</button><button class="btn-sm danger" onclick="closeModal('modal-editrec')">Supprimer</button><button class="btn-sm" onclick="closeModal('modal-editrec')">Enregistrer</button></div>
+  </div>
+</div>
+
+<!-- MODAL: CNAME guide -->
+<div class="modal-overlay" id="modal-cname">
+  <div class="modal">
+    <h3>Guide CNAME — Domaine externe</h3>
+    <p>Configurez votre domaine externe pour pointer vers un tunnel MNH via CNAME.</p>
+    <div class="steps">
+      <div class="step"><span>Dans le panneau DNS de votre registrar, créez un enregistrement <span class="hl">CNAME</span>.</span></div>
+      <div class="step"><span>Hôte : <code style="color:#1aff6e">www</code> (ou <code style="color:#1aff6e">@</code> si votre registrar supporte CNAME apex / ALIAS).</span></div>
+      <div class="step"><span>Valeur : <code style="color:#1aff6e">portfolio.alice.mynodehost.io</code> (ou le sous-domaine MNH de votre choix).</span></div>
+      <div class="step"><span>Attendez la propagation (quelques minutes à 1h). Testez avec <code style="color:#1aff6e">dig www.mondomaine.fr CNAME</code>.</span></div>
+      <div class="step"><span>Activez votre domaine dans MNH pour la génération SSL automatique. Nous émettrons un certificat Let's Encrypt.</span></div>
+    </div>
+    <div class="info-note" style="margin-top:14px">ℹ️ <span class="hl">Avantage CNAME :</span> si l'IP du tunnel change (IP partagée redémarrée), votre domaine suit automatiquement — le CNAME résout vers le sous-domaine MNH qui lui pointe vers l'IP actuelle du tunnel.</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-cname')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Delegation wizard -->
+<div class="modal-overlay" id="modal-delwiz">
+  <div class="modal">
+    <h3>⬢ Déléguer un domaine — Assistant</h3>
+    <p>Suivez ces étapes pour déléguer la gestion DNS à MyNodeHost.</p>
+    <div class="form-group" style="margin-bottom:14px"><div class="form-label">Nom de domaine à déléguer</div><input class="input-mono" type="text" placeholder="mondomaine.com"></div>
+    <div class="form-group" style="margin-bottom:14px"><div class="form-label">Votre registrar</div><select class="input-mono"><option>OVH</option><option>Namecheap</option><option>Gandi</option><option>Cloudflare</option><option>GoDaddy</option><option>Autre</option></select></div>
+    <div class="form-label" style="margin-bottom:8px">Nameservers à configurer</div>
+    <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns1.mynodehost.io</span><button class="copy-val" onclick="copyText('ns1.mynodehost.io',this)">📋</button></div>
+    <div class="ns-box" style="display:flex;align-items:center;justify-content:space-between"><span>ns2.mynodehost.io</span><button class="copy-val" onclick="copyText('ns2.mynodehost.io',this)">📋</button></div>
+    <div class="warn-note">⚠ Attendez la propagation DNS (15 min à 48h) avant de créer vos enregistrements. Vérifiez l'état depuis la page Délégation DNS.</div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-delwiz')">Annuler</button><button class="btn-sm purple" onclick="closeModal('modal-delwiz')">J'ai configuré mes NS →</button></div>
+  </div>
+</div>
+
+<script>
+const ALL_RECORDS=[
+  {zone:'alice.mynodehost.io',host:'portfolio.alice.mynodehost.io',type:'A',val:'203.0.113.42',tunnel:'portfolio · :443',status:'ok'},
+  {zone:'alice.mynodehost.io',host:'ha.alice.mynodehost.io',type:'A',val:'198.51.100.7',tunnel:'ha · :8080',status:'ok'},
+  {zone:'alice.mynodehost.io',host:'mc.alice.mynodehost.io',type:'A',val:'198.51.100.7',tunnel:'mc · :25565',status:'ok'},
+  {zone:'alice.mynodehost.io',host:'nodered.alice.mynodehost.io',type:'A',val:'198.51.100.7',tunnel:'nodered · :1880',status:'pending'},
+  {zone:'alice.mynodehost.io',host:'nas.alice.mynodehost.io',type:'A',val:'198.51.100.91',tunnel:'nas · :5000',status:'ok'},
+  {zone:'example.com',host:'@ example.com',type:'A',val:'203.0.113.42',tunnel:'portfolio · :443',status:'ok'},
+  {zone:'example.com',host:'app.example.com',type:'A',val:'198.51.100.7',tunnel:'ha · :8080',status:'ok'},
+  {zone:'example.com',host:'www.example.com',type:'CNAME',val:'example.com',tunnel:'—',status:'ok'},
+  {zone:'monblog.fr',host:'www.monblog.fr',type:'CNAME',val:'portfolio.alice.mynodehost.io',tunnel:'portfolio · :443',status:'ok'},
+];
+
+function buildAllRecords(){
+  const tb=document.getElementById('all-records-tbody');
+  tb.innerHTML=ALL_RECORDS.map(r=>{
+    const sc=r.status==='ok'?'ok':r.status==='pending'?'pending':'err';
+    const sl=r.status==='ok'?'✓ Synchro':r.status==='pending'?'⟳ En attente':'✕ Erreur';
+    const tc=r.type==='CNAME'?'cname':r.type==='TXT'?'txt':'';
+    return `<tr style="border-bottom:1px solid rgba(26,255,110,.04)">
+      <td style="padding:9px 14px;font-size:11px;color:#6a8070;font-family:'IBM Plex Mono',monospace">${r.zone}</td>
+      <td style="padding:9px 14px;font-size:11px;color:#e8f0eb;font-family:'IBM Plex Mono',monospace">${r.host}</td>
+      <td style="padding:9px 14px"><span class="type-pill ${tc}">${r.type}</span></td>
+      <td style="padding:9px 14px;font-size:11px;color:#6a8070;font-family:'IBM Plex Mono',monospace">${r.val}</td>
+      <td style="padding:9px 14px;font-size:11px;color:#6a8070">${r.tunnel}</td>
+      <td style="padding:9px 14px"><span class="sync-badge ${sc}">${sl}</span></td>
+    </tr>`;
+  }).join('');
+}
+buildAllRecords();
+
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function toggleBlock(hdr) {
+  const body = hdr.nextElementSibling;
+  const chevron = hdr.querySelector('.chevron');
+  const isOpen = body.style.display !== 'none' && body.style.display !== '';
+  body.style.display = isOpen ? 'none' : 'block';
+  if (chevron) chevron.classList.toggle('open', !isOpen);
+}
+
+function toggleDomain(hdr) {
+  const body = hdr.nextElementSibling;
+  const ch = hdr.querySelector('.chevron');
+  const open = body.style.display !== 'none' && body.style.display !== '';
+  body.style.display = open ? 'none' : 'block';
+  if (ch) ch.classList.toggle('open', !open);
+}
+
+function toggleDrawer(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+function switchTab(page, tab, el) {
+  const pg = document.getElementById('page-' + page);
+  pg.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  pg.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById(page + '-tab-' + tab).classList.add('active');
+}
+
+function selTunnel(el) {
+  el.closest('.tunnel-sel').querySelectorAll('.tunnel-chip').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let activePauseBtn = null;
+function togglePause(btn) { activePauseBtn = btn; openModal('pause-modal'); }
+function closePauseModal() { closeModal('pause-modal'); activePauseBtn = null; }
+function confirmPause() {
+  if (activePauseBtn) {
+    activePauseBtn.classList.toggle('paused');
+    activePauseBtn.textContent = activePauseBtn.classList.contains('paused') ? '▶' : '⏸';
+  }
+  closePauseModal();
+}
+
+function removeRow(btn) { btn.closest('.allowlist-row').remove(); }
+
+function copyStatus() {
+  if (navigator.clipboard) navigator.clipboard.writeText('status.alice.mynodehost.io');
+  const btn = event.currentTarget;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Copié';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+function copyText(txt, btn) {
+  if (navigator.clipboard) navigator.clipboard.writeText(txt);
+  const o = btn.textContent;
+  btn.textContent = '✓';
+  setTimeout(() => btn.textContent = o, 1500);
+}
+
+function openEditRec(name, ip, type, iptype) {
+  document.getElementById('editrec-title').textContent = 'Éditer — ' + name + '.alice.mynodehost.io';
+  document.getElementById('editrec-desc').textContent = 'Modifier le tunnel lié à cet enregistrement A.';
+  document.getElementById('editrec-warn').style.display = iptype === 'shared' ? 'block' : 'none';
+  const chips = document.querySelectorAll('#editrec-tunnels .tunnel-chip');
+  chips.forEach(c => { c.classList.remove('sel'); if (c.textContent.startsWith(name)) c.classList.add('sel'); });
+  openModal('modal-editrec');
+}
+
+function updateCustomModeHint() {
+  const m = document.getElementById('custom-mode').value;
+  document.getElementById('custom-mode-hint-ns').style.display = m === 'ns' ? 'block' : 'none';
+  document.getElementById('custom-mode-hint-cname').style.display = m === 'cname' ? 'block' : 'none';
+}
+
+function simulateIPChange() {
+  const t = document.getElementById('sim-tunnel').value;
+  const newip = document.getElementById('sim-newip').value;
+  const [name, oldip] = t.split(':');
+  const log = document.getElementById('sim-log');
+  log.style.display = 'block';
+  log.innerHTML = '';
+  const affected = ALL_RECORDS.filter(r => r.val === oldip && r.type === 'A');
+  let lines = [];
+  lines.push('<span style="color:#ffb347">⟳  Tunnel ' + name + ' redémarre…</span>');
+  log.innerHTML = lines.join('<br>');
+  setTimeout(() => {
+    lines.push('<span style="color:#ffb347">⚡ Nouvelle IP assignée depuis le pool : ' + newip + '</span>');
+    log.innerHTML = lines.join('<br>');
+    setTimeout(() => {
+      lines.push('<span style="color:#6a8070">🔍 Détection des enregistrements liés à ' + oldip + '…</span>');
+      affected.forEach(r => lines.push('<span style="color:#6a8070">   → ' + r.host + ' (' + r.zone + ')</span>'));
+      log.innerHTML = lines.join('<br>');
+      setTimeout(() => {
+        affected.forEach(r => lines.push('<span style="color:#1aff6e">✓  Mise à jour A record : ' + r.host + ' → ' + newip + '</span>'));
+        const el = document.getElementById('rec-' + name);
+        if (el) el.textContent = newip;
+        const ex = document.getElementById('rec-app-ex');
+        if (ex && name === 'ha') ex.textContent = newip;
+        lines.push('<span style="color:#1aff6e">✓  Propagation DNS en cours (TTL 30s)…</span>');
+        lines.push('<span style="color:#1aff6e">✓  Tous les enregistrements mis à jour — aucune action requise.</span>');
+        log.innerHTML = lines.join('<br>');
+      }, 600);
+    }, 400);
+  }, 300);
+}
+
+function buildSparklines() {
+  ['spark-d1','spark-d1b','spark-d2','spark-d3','spark-d4','spark-d5','spark-d6'].forEach(id => {
+    const container = document.getElementById(id);
+    if (!container) return;
+    container.innerHTML = '';
+    const vals = Array.from({length: 24}, () => Math.random());
+    const max = Math.max(...vals);
+    vals.forEach(v => {
+      const bar = document.createElement('div');
+      bar.className = 'sparkline-bar';
+      bar.style.height = Math.max(3, (v / max) * 28) + 'px';
+      container.appendChild(bar);
+    });
+  });
+}
+buildSparklines();
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
