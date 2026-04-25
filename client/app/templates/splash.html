@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WireGuard Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080c10;
+    color: #e6edf3;
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .splash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+    width: 380px;
+  }
+
+  /* ── Header ──────────────────────────────── */
+  .header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+  }
+
+  .ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid #1c2128;
+    border-top-color: #e6edf3;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .ring-inner {
+    position: absolute;
+    inset: 14px;
+    border-radius: 50%;
+    border: 2px solid #1c2128;
+    border-bottom-color: #58a6ff;
+    animation: spin 1.4s linear infinite reverse;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .title { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+
+  /* ── Checks list ─────────────────────────── */
+  .checks {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 14px;
+    background: #0d1117;
+    border: 1px solid #21262d;
+    border-radius: 10px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .check-item.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .check-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* états */
+  .check-icon.pending {
+    border: 2px solid #21262d;
+    border-top-color: #8b949e;
+    animation: spin 0.7s linear infinite;
+    font-size: 0;
+  }
+  .check-icon.ok    { background: #0d2a15; color: #3fb950; border: 1px solid #3fb95044; }
+  .check-icon.warn  { background: #271d00; color: #d29922; border: 1px solid #d2992244; }
+  .check-icon.fail  { background: #2d1117; color: #f85149; border: 1px solid #f8514944; }
+
+  .check-text { flex: 1; min-width: 0; }
+
+  .check-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #e6edf3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .check-detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #484f58;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 280px;
+  }
+
+  .check-item.state-warn  { border-color: #d2992222; }
+  .check-item.state-fail  { border-color: #f8514922; }
+  .check-item.state-ok    { border-color: #3fb95022; }
+
+  /* ── Bottom ──────────────────────────────── */
+  .bottom-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .status-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #484f58;
+  }
+
+  .btn-continue {
+    display: none;
+    padding: 8px 20px;
+    background: #1f6feb;
+    border: 1px solid #58a6ff44;
+    border-radius: 8px;
+    color: #e6edf3;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-continue:hover { background: #388bfd; }
+  .btn-continue.visible { display: block; }
+
+  /* version */
+  .version {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #30363d;
+  }
+</style>
+</head>
+<body>
+
+<div class="splash">
+
+  <div class="header">
+    <div class="ring-wrap">
+      <div class="ring"></div>
+      <div class="ring-inner"></div>
+    </div>
+    <div class="title">WireGuard Manager</div>
+  </div>
+
+  <div class="checks" id="checks"></div>
+
+  <div class="bottom-row">
+    <div class="status-text" id="status-text">Vérification du système…</div>
+    <button class="btn-continue" id="btn-continue" onclick="goToApp()">
+      Continuer →
+    </button>
+  </div>
+
+</div>
+
+<div class="version">v0.1.0</div>
+
+<script>
+const ICONS = { ok: '✓', warn: '!', fail: '✕' };
+
+let hasFatal = false;
+
+function addCheck(data) {
+  const el = document.createElement('div');
+  el.className = 'check-item';
+  el.id = `check-${data.id}`;
+  el.innerHTML = `
+    <div class="check-icon pending" id="icon-${data.id}"></div>
+    <div class="check-text">
+      <div class="check-label">${data.label}</div>
+      <div class="check-detail" id="detail-${data.id}">…</div>
+    </div>`;
+  document.getElementById('checks').appendChild(el);
+
+  // Apparition animée
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => el.classList.add('visible'));
+  });
+}
+
+function resolveCheck(data) {
+  const el = document.getElementById(`check-${data.id}`);
+  const icon = document.getElementById(`icon-${data.id}`);
+  const detail = document.getElementById(`detail-${data.id}`);
+  if (!el) return;
+
+  const state = !data.ok ? 'fail' : data.warning ? 'warn' : 'ok';
+
+  icon.className = `check-icon ${state}`;
+  icon.textContent = ICONS[state];
+  detail.textContent = data.detail || '';
+  el.classList.add(`state-${state}`);
+
+  if (!data.ok && !data.warning) hasFatal = true;
+}
+
+function goToApp() {
+  window.location.href = '/app';
+}
+
+// SSE — reçoit les checks un par un
+const es = new EventSource('/api/checks/stream');
+
+es.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+
+  if (data.id === '__done__') {
+    es.close();
+    const statusEl = document.getElementById('status-text');
+    const btn = document.getElementById('btn-continue');
+
+    if (hasFatal) {
+      statusEl.textContent = 'Des dépendances manquent.';
+      statusEl.style.color = '#f85149';
+    } else {
+      statusEl.textContent = 'Système prêt.';
+      statusEl.style.color = '#3fb950';
+      // Redirige automatiquement après 1.2s si tout est ok
+      setTimeout(goToApp, 1200);
+    }
+
+    btn.classList.add('visible');
+    return;
+  }
+
+  // Ajoute la ligne en état "pending" puis la résout
+  addCheck(data);
+  setTimeout(() => resolveCheck(data), 180);
+};
+
+es.onerror = () => {
+  es.close();
+  document.getElementById('status-text').textContent = 'Erreur de connexion au serveur.';
+};
+</script>
+</body>
+</html>

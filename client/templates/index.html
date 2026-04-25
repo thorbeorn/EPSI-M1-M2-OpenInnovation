@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WireGuard Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #080c10;
+    --bg1:      #0d1117;
+    --bg2:      #161b22;
+    --bg3:      #1c2128;
+    --border:   #21262d;
+    --border2:  #30363d;
+    --text:     #e6edf3;
+    --text2:    #8b949e;
+    --text3:    #484f58;
+    --accent:   #58a6ff;
+    --accent2:  #1f6feb;
+    --green:    #3fb950;
+    --green-bg: #0d2a15;
+    --red:      #f85149;
+    --red-bg:   #2d1117;
+    --yellow:   #d29922;
+    --yellow-bg:#271d00;
+    --purple:   #bc8cff;
+    --mono:     'JetBrains Mono', monospace;
+    --sans:     'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg1);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .logo {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent2), var(--purple));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    font-weight: 300;
+    letter-spacing: 0.5px;
+  }
+
+  nav { padding: 12px 8px; flex: 1; }
+
+  .nav-section {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 12px 4px;
+    font-weight: 500;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+    user-select: none;
+    margin-bottom: 1px;
+  }
+
+  .nav-item:hover { background: var(--bg2); color: var(--text); }
+  .nav-item.active { background: var(--accent2)22; color: var(--accent); }
+  .nav-item .icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .status-dot.green { background: var(--green); box-shadow: 0 0 6px var(--green)88; }
+
+  /* ── MAIN ────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .topbar {
+    height: 52px;
+    background: var(--bg1);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .topbar-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 1px;
+  }
+
+  .topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: none;
+  }
+  .btn:hover { border-color: var(--border2); background: var(--bg3); }
+  .btn.primary { background: var(--accent2); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: var(--accent); }
+  .btn.danger { background: var(--red-bg); border-color: var(--red)55; color: var(--red); }
+  .btn.danger:hover { background: var(--red)22; }
+  .btn.success { background: var(--green-bg); border-color: var(--green)55; color: var(--green); }
+  .btn.success:hover { background: var(--green)22; }
+  .btn.sm { padding: 5px 10px; font-size: 11px; }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+  }
+
+  .content::-webkit-scrollbar { width: 6px; }
+  .content::-webkit-scrollbar-track { background: transparent; }
+  .content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ── PAGE SECTIONS ──────────────────────────────── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ──────────────────────────────────────── */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 24px; }
+
+  .card {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s;
+  }
+  .card:hover { border-color: var(--border2); }
+  .card.active-card { border-color: var(--green)44; background: linear-gradient(180deg, #0d2a1522 0%, var(--bg1) 60%); }
+  .card.error-card { border-color: var(--red)44; }
+
+  .card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+
+  .tunnel-icon {
+    width: 38px; height: 38px;
+    background: var(--bg3);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .card-name { font-size: 15px; font-weight: 700; }
+  .card-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+    word-break: break-all;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 20px;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    margin-left: auto; flex-shrink: 0;
+  }
+  .badge.active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green)44; }
+  .badge.inactive { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+  .badge.running { background: var(--green-bg); color: var(--green); border: 1px solid var(--green)44; }
+  .badge.stopped { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+  .badge.error { background: var(--red-bg); color: var(--red); border: 1px solid var(--red)44; }
+  .badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin: 12px 0;
+  }
+
+  .stat {
+    background: var(--bg2);
+    border-radius: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+  }
+  .stat-label { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.5px; text-transform: uppercase; }
+  .stat-value { font-family: var(--mono); font-size: 13px; font-weight: 500; color: var(--text); margin-top: 2px; }
+
+  .card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+  /* ── EMPTY STATE ────────────────────────────────── */
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+  .empty-sub { font-family: var(--mono); font-size: 12px; line-height: 1.6; }
+
+  /* ── MODAL ──────────────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: #000000cc;
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg1);
+    border: 1px solid var(--border2);
+    border-radius: 16px;
+    padding: 24px;
+    width: 500px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-family: var(--mono); font-size: 11px; color: var(--text2);
+    margin-bottom: 6px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .form-input {
+    width: 100%; padding: 9px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--mono); font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus { border-color: var(--accent2); }
+  .form-input::placeholder { color: var(--text3); }
+
+  select.form-input { cursor: pointer; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  /* ── TOAST ───────────────────────────────────────── */
+  .toast-container {
+    position: fixed; bottom: 20px; right: 20px;
+    display: flex; flex-direction: column; gap: 8px;
+    z-index: 200;
+  }
+
+  .toast {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-family: var(--mono);
+    max-width: 320px;
+    display: flex; align-items: center; gap: 10px;
+    animation: toastIn 0.25s ease;
+    box-shadow: 0 4px 20px #00000055;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .toast.ok { border-color: var(--green)44; }
+  .toast.err { border-color: var(--red)44; color: var(--red); }
+
+  /* ── LOADING ─────────────────────────────────────── */
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── CONFIG EDITOR ───────────────────────────────── */
+  .config-editor {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    color: var(--text);
+    width: 100%;
+    min-height: 260px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.7;
+  }
+  .config-editor:focus { border-color: var(--accent2); }
+
+  /* ── DASHBOARD STATS ─────────────────────────────── */
+  .dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .dash-stat {
+    background: var(--bg1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .dash-stat-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+  .dash-stat-value { font-size: 28px; font-weight: 800; margin-top: 6px; line-height: 1; }
+  .dash-stat-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 6px; }
+
+  /* ── SECTION HEADER ──────────────────────────────── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text2); }
+
+  hr.divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-text">WG Manager</div>
+      <div class="logo-sub">v0.1.0 · local</div>
+    </div>
+  </div>
+  <nav>
+    <div class="nav-section">Navigation</div>
+    <div class="nav-item active" data-page="dashboard" onclick="navigate('dashboard', this)">
+      <span class="icon">◈</span> Dashboard
+    </div>
+    <div class="nav-item" data-page="tunnels" onclick="navigate('tunnels', this)">
+      <span class="icon">⬡</span> Tunnels
+      <span class="status-dot" id="nav-tunnels-dot"></span>
+    </div>
+    <div class="nav-item" data-page="ports" onclick="navigate('ports', this)">
+      <span class="icon">⇄</span> Exposition ports
+    </div>
+    <div class="nav-section" style="margin-top:12px;">Outils</div>
+    <div class="nav-item" data-page="keygen" onclick="navigate('keygen', this)">
+      <span class="icon">⌗</span> Générateur clés
+    </div>
+  </nav>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-sub" id="topbar-sub">Vue d'ensemble</div>
+    </div>
+    <div class="topbar-actions" id="topbar-actions">
+      <button class="btn sm" onclick="refreshAll()">↻ Rafraîchir</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- ── PAGE: DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="dash-stats">
+        <div class="dash-stat">
+          <div class="dash-stat-label">Tunnels actifs</div>
+          <div class="dash-stat-value" id="stat-active" style="color:var(--green)">—</div>
+          <div class="dash-stat-sub">sur <span id="stat-total">—</span> configurés</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-label">Ports exposés</div>
+          <div class="dash-stat-value" id="stat-ports" style="color:var(--accent)">—</div>
+          <div class="dash-stat-sub">forwards actifs</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-label">Transfert ↓</div>
+          <div class="dash-stat-value" id="stat-rx" style="color:var(--purple); font-size:20px;">—</div>
+          <div class="dash-stat-sub">total reçu</div>
+        </div>
+        <div class="dash-stat">
+          <div class="dash-stat-label">Transfert ↑</div>
+          <div class="dash-stat-value" id="stat-tx" style="color:var(--yellow); font-size:20px;">—</div>
+          <div class="dash-stat-sub">total envoyé</div>
+        </div>
+      </div>
+      <div class="section-header">
+        <div class="section-title">Tunnels récents</div>
+      </div>
+      <div class="grid" id="dash-tunnels"></div>
+    </div>
+
+    <!-- ── PAGE: TUNNELS ── -->
+    <div class="page" id="page-tunnels">
+      <div class="grid" id="tunnels-list"></div>
+      <div id="tunnels-empty" class="empty" style="display:none">
+        <div class="empty-icon">⬡</div>
+        <div class="empty-title">Aucun tunnel WireGuard</div>
+        <div class="empty-sub">Aucune interface wg détectée.<br>Créez une config dans /etc/wireguard/ ou importez-en une.</div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: PORTS ── -->
+    <div class="page" id="page-ports">
+      <div class="grid" id="ports-list"></div>
+      <div id="ports-empty" class="empty" style="display:none">
+        <div class="empty-icon">⇄</div>
+        <div class="empty-title">Aucune règle de forwarding</div>
+        <div class="empty-sub">Ajoutez une règle pour exposer un port local<br>vers un hôte distant via un tunnel WireGuard.</div>
+      </div>
+    </div>
+
+    <!-- ── PAGE: KEYGEN ── -->
+    <div class="page" id="page-keygen">
+      <div style="max-width:560px;">
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header">
+            <div class="tunnel-icon">⌗</div>
+            <div>
+              <div class="card-name">Générateur de clés WireGuard</div>
+              <div class="card-sub">Paire clé privée / clé publique Ed25519</div>
+            </div>
+          </div>
+          <button class="btn primary" onclick="genKeypair()" style="width:100%;justify-content:center;margin-bottom:16px;">
+            ⚡ Générer une nouvelle paire
+          </button>
+          <div class="form-group">
+            <label class="form-label">Clé privée</label>
+            <input class="form-input" id="kp-private" readonly placeholder="—" style="cursor:pointer" onclick="copyField('kp-private')">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Clé publique</label>
+            <input class="form-input" id="kp-public" readonly placeholder="—" style="cursor:pointer" onclick="copyField('kp-public')">
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-top:8px;">
+            💡 Cliquez sur un champ pour le copier · La clé privée ne doit jamais être partagée
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- MODAL TUNNEL CONFIG -->
+<div class="modal-overlay" id="modal-config">
+  <div class="modal" style="width:640px;">
+    <div class="modal-title">⬡ Configuration — <span id="modal-config-name"></span></div>
+    <div class="form-group">
+      <label class="form-label">Fichier wg.conf</label>
+      <textarea class="config-editor" id="modal-config-text" spellcheck="false"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-config')">Annuler</button>
+      <button class="btn primary" onclick="saveConfig()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ADD PORT FORWARD -->
+<div class="modal-overlay" id="modal-add-port">
+  <div class="modal">
+    <div class="modal-title">⇄ Nouvelle règle de port forwarding</div>
+    <div class="form-group">
+      <label class="form-label">Label</label>
+      <input class="form-input" id="pf-label" placeholder="ex: Accès SSH serveur prod">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Port local</label>
+        <input class="form-input" id="pf-local-port" type="number" placeholder="8080">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tunnel WireGuard</label>
+        <select class="form-input" id="pf-tunnel"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Hôte distant</label>
+        <input class="form-input" id="pf-remote-host" placeholder="10.0.0.1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Port distant</label>
+        <input class="form-input" id="pf-remote-port" type="number" placeholder="22">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('modal-add-port')">Annuler</button>
+      <button class="btn primary" onclick="submitAddPort()">➕ Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+// ── STATE ──────────────────────────────────────────────
+let tunnels = [];
+let ports = [];
+let currentConfigTunnel = null;
+let currentPage = 'dashboard';
+
+// ── NAVIGATION ─────────────────────────────────────────
+const PAGE_META = {
+  dashboard: { title: 'Dashboard', sub: 'Vue d\'ensemble' },
+  tunnels:   { title: 'Tunnels WireGuard', sub: 'Gestion des interfaces' },
+  ports:     { title: 'Exposition de ports', sub: 'Port forwarding via socat' },
+  keygen:    { title: 'Générateur de clés', sub: 'Ed25519 pour WireGuard' },
+};
+
+function navigate(page, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  document.getElementById(`page-${page}`).classList.add('active');
+  const meta = PAGE_META[page] || {};
+  document.getElementById('topbar-title').textContent = meta.title || page;
+  document.getElementById('topbar-sub').textContent = meta.sub || '';
+  currentPage = page;
+  updateTopbarActions(page);
+  if (page === 'tunnels' || page === 'dashboard') loadTunnels();
+  if (page === 'ports') loadPorts();
+}
+
+function updateTopbarActions(page) {
+  const el = document.getElementById('topbar-actions');
+  if (page === 'ports') {
+    el.innerHTML = `<button class="btn sm primary" onclick="openAddPort()">➕ Ajouter une règle</button>
+                    <button class="btn sm" onclick="refreshAll()">↻</button>`;
+  } else {
+    el.innerHTML = `<button class="btn sm" onclick="refreshAll()">↻ Rafraîchir</button>`;
+  }
+}
+
+// ── API ─────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const r = await fetch(path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts
+  });
+  return r.json();
+}
+
+// ── TUNNELS ─────────────────────────────────────────────
+async function loadTunnels() {
+  try {
+    tunnels = await api('/api/tunnels/');
+  } catch {
+    tunnels = [];
+  }
+  renderTunnels();
+  updateDashStats();
+}
+
+function renderTunnels() {
+  const list = document.getElementById('tunnels-list');
+  const empty = document.getElementById('tunnels-empty');
+  const dash = document.getElementById('dash-tunnels');
+
+  const html = tunnels.map(t => tunnelCard(t)).join('');
+
+  if (list) {
+    list.innerHTML = html;
+    empty.style.display = tunnels.length ? 'none' : 'block';
+  }
+  if (dash) dash.innerHTML = html || '<div style="color:var(--text3);font-size:13px;">Aucun tunnel détecté.</div>';
+
+  // Nav dot
+  const active = tunnels.filter(t => t.status === 'active').length;
+  const dot = document.getElementById('nav-tunnels-dot');
+  if (dot) dot.className = 'status-dot' + (active > 0 ? ' green' : '');
+}
+
+function tunnelCard(t) {
+  const isActive = t.status === 'active';
+  return `
+    <div class="card ${isActive ? 'active-card' : ''}">
+      <div class="card-header">
+        <div class="tunnel-icon">${isActive ? '🟢' : '⭕'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="card-name">${t.name}</div>
+          <div class="card-sub">${t.public_key || 'clé non disponible'}</div>
+        </div>
+        <span class="badge ${t.status}">${t.status}</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">Peers</div>
+          <div class="stat-value">${t.peers ?? '—'}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">↓ RX</div>
+          <div class="stat-value">${fmtBytes(t.transfer_rx)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">↑ TX</div>
+          <div class="stat-value">${fmtBytes(t.transfer_tx)}</div>
+        </div>
+      </div>
+      ${t.endpoint ? `<div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:10px;">→ ${t.endpoint}</div>` : ''}
+      <div class="card-actions">
+        ${isActive
+          ? `<button class="btn sm danger" onclick="stopTunnel('${t.name}')">⏹ Arrêter</button>`
+          : `<button class="btn sm success" onclick="startTunnel('${t.name}')">▶ Démarrer</button>`
+        }
+        <button class="btn sm" onclick="openConfig('${t.name}')">⚙ Config</button>
+      </div>
+    </div>`;
+}
+
+async function startTunnel(name) {
+  toast(`Démarrage de ${name}…`);
+  const r = await api(`/api/tunnels/${name}/start`, { method: 'POST' });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  loadTunnels();
+}
+
+async function stopTunnel(name) {
+  const r = await api(`/api/tunnels/${name}/stop`, { method: 'POST' });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  loadTunnels();
+}
+
+async function openConfig(name) {
+  currentConfigTunnel = name;
+  document.getElementById('modal-config-name').textContent = name;
+  document.getElementById('modal-config-text').value = 'Chargement…';
+  document.getElementById('modal-config').classList.add('open');
+  const r = await api(`/api/tunnels/${name}/config`);
+  document.getElementById('modal-config-text').value = r.config || '# Config non trouvée';
+}
+
+async function saveConfig() {
+  const config = document.getElementById('modal-config-text').value;
+  const r = await api(`/api/tunnels/${currentConfigTunnel}/config`, {
+    method: 'POST',
+    body: JSON.stringify({ config })
+  });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  if (r.ok) closeModal('modal-config');
+}
+
+// ── PORT FORWARDS ────────────────────────────────────────
+async function loadPorts() {
+  try {
+    ports = await api('/api/ports/');
+  } catch {
+    ports = [];
+  }
+  renderPorts();
+  updateDashStats();
+}
+
+function renderPorts() {
+  const list = document.getElementById('ports-list');
+  const empty = document.getElementById('ports-empty');
+  if (!list) return;
+  list.innerHTML = ports.map(p => portCard(p)).join('');
+  empty.style.display = ports.length ? 'none' : 'block';
+}
+
+function portCard(p) {
+  const isRunning = p.status === 'running';
+  return `
+    <div class="card ${isRunning ? 'active-card' : ''}">
+      <div class="card-header">
+        <div class="tunnel-icon">${isRunning ? '🔗' : '🔌'}</div>
+        <div style="flex:1;min-width:0">
+          <div class="card-name">${p.label}</div>
+          <div class="card-sub">localhost:${p.local_port} → ${p.remote_host}:${p.remote_port}</div>
+        </div>
+        <span class="badge ${p.status}">${p.status}</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat">
+          <div class="stat-label">Local</div>
+          <div class="stat-value">:${p.local_port}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Distant</div>
+          <div class="stat-value">:${p.remote_port}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Tunnel</div>
+          <div class="stat-value" style="font-size:11px">${p.tunnel || '—'}</div>
+        </div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:10px;">
+        ${p.pid ? `PID ${p.pid}` : 'non démarré'} · ${p.type}
+      </div>
+      <div class="card-actions">
+        ${isRunning
+          ? `<button class="btn sm danger" onclick="stopPort('${p.id}')">⏹ Arrêter</button>`
+          : `<button class="btn sm success" onclick="startPort('${p.id}')">▶ Démarrer</button>`
+        }
+        <button class="btn sm danger" onclick="removePort('${p.id}')">🗑 Supprimer</button>
+      </div>
+    </div>`;
+}
+
+async function startPort(id) {
+  const r = await api(`/api/ports/${id}/start`, { method: 'POST' });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  loadPorts();
+}
+
+async function stopPort(id) {
+  const r = await api(`/api/ports/${id}/stop`, { method: 'POST' });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  loadPorts();
+}
+
+async function removePort(id) {
+  if (!confirm('Supprimer cette règle ?')) return;
+  const r = await api(`/api/ports/${id}`, { method: 'DELETE' });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  loadPorts();
+}
+
+function openAddPort() {
+  // Populate tunnel select
+  const sel = document.getElementById('pf-tunnel');
+  sel.innerHTML = '<option value="">— aucun —</option>' +
+    tunnels.map(t => `<option value="${t.name}">${t.name}</option>`).join('');
+  document.getElementById('modal-add-port').classList.add('open');
+}
+
+async function submitAddPort() {
+  const data = {
+    label: document.getElementById('pf-label').value || 'Port forward',
+    local_port: document.getElementById('pf-local-port').value,
+    remote_host: document.getElementById('pf-remote-host').value,
+    remote_port: document.getElementById('pf-remote-port').value,
+    tunnel: document.getElementById('pf-tunnel').value,
+    type: 'socat',
+  };
+  if (!data.local_port || !data.remote_host || !data.remote_port) {
+    toast('Remplissez tous les champs obligatoires.', 'err'); return;
+  }
+  const r = await api('/api/ports/', { method: 'POST', body: JSON.stringify(data) });
+  toast(r.message, r.ok ? 'ok' : 'err');
+  if (r.ok) { closeModal('modal-add-port'); loadPorts(); }
+}
+
+// ── KEY GEN ──────────────────────────────────────────────
+async function genKeypair() {
+  const r = await api('/api/tunnels/utils/keypair');
+  document.getElementById('kp-private').value = r.private_key || 'Erreur';
+  document.getElementById('kp-public').value = r.public_key || 'Erreur';
+  toast('Paire générée ✓', 'ok');
+}
+
+function copyField(id) {
+  const el = document.getElementById(id);
+  if (!el.value || el.value === '—') return;
+  navigator.clipboard.writeText(el.value);
+  toast('Copié dans le presse-papier', 'ok');
+}
+
+// ── DASHBOARD ────────────────────────────────────────────
+function updateDashStats() {
+  const active = tunnels.filter(t => t.status === 'active').length;
+  const portsRunning = ports.filter(p => p.status === 'running').length;
+  const totalRx = tunnels.reduce((s, t) => s + (t.transfer_rx || 0), 0);
+  const totalTx = tunnels.reduce((s, t) => s + (t.transfer_tx || 0), 0);
+
+  document.getElementById('stat-active').textContent = active;
+  document.getElementById('stat-total').textContent = tunnels.length;
+  document.getElementById('stat-ports').textContent = portsRunning;
+  document.getElementById('stat-rx').textContent = fmtBytes(totalRx);
+  document.getElementById('stat-tx').textContent = fmtBytes(totalTx);
+}
+
+// ── UTILS ────────────────────────────────────────────────
+function fmtBytes(b) {
+  if (!b) return '0 B';
+  const u = ['B','KB','MB','GB','TB'];
+  let i = 0;
+  while (b >= 1024 && i < u.length - 1) { b /= 1024; i++; }
+  return `${b.toFixed(i ? 1 : 0)} ${u[i]}`;
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+let toastTimer = {};
+function toast(msg, type = '') {
+  const id = Date.now();
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span>${type === 'ok' ? '✓' : type === 'err' ? '✕' : 'ℹ'}</span> ${msg}`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+async function refreshAll() {
+  await loadTunnels();
+  await loadPorts();
+  toast('Actualisé', 'ok');
+}
+
+// ── INIT ─────────────────────────────────────────────────
+loadTunnels();
+loadPorts();
+setInterval(() => {
+  if (currentPage === 'dashboard' || currentPage === 'tunnels') loadTunnels();
+  if (currentPage === 'ports') loadPorts();
+}, 5000);
+</script>
+</body>
+</html>

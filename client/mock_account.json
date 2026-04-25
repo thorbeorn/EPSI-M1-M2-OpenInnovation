@@ -1,0 +1,43 @@
+{
+  "client": {
+    "id": "CLT-00421",
+    "name": "Acme Corp",
+    "email": "admin@acme.corp",
+    "plan": "pro"
+  },
+
+  "tunnel": {
+    "interface": "wg-acme0",
+    "peer_endpoint": "51.77.100.12:51820",
+    "peer_public_key": "xTIBA5rboUvnH4htodjb6e69SX9ricerjcfi4+3UPjo=",
+    "assigned_ip": "10.10.42.1/24",
+    "managed": true
+  },
+
+  "dedicated_ips": [
+    { "id": "dip-1", "address": "185.201.144.12", "label": "EU-FR-1", "used_ports": [80, 443, 8080] },
+    { "id": "dip-2", "address": "185.201.144.13", "label": "EU-FR-2", "used_ports": [443, 3000] }
+  ],
+
+  "shared_ips": [
+    { "id": "sip-1", "address": "51.77.200.100", "label": "Shared-EU-1", "used_ports": [80, 443, 8080, 8443, 3000, 3001, 5000, 9000] },
+    { "id": "sip-2", "address": "51.77.200.101", "label": "Shared-EU-2", "used_ports": [80, 443, 22, 2222, 5432] }
+  ],
+
+  "dns_records": [
+    { "id": "dns-1", "hostname": "api.acme.corp",   "type": "A", "target": "185.201.144.12" },
+    { "id": "dns-2", "hostname": "app.acme.corp",   "type": "A", "target": "185.201.144.12" },
+    { "id": "dns-3", "hostname": "db.acme.corp",    "type": "A", "target": "185.201.144.13" }
+  ],
+
+  "history": [
+    { "ts": "2025-04-25T08:12:03", "event": "tunnel_up",      "detail": "Tunnel wg-acme0 connecté" },
+    { "ts": "2025-04-25T07:55:11", "event": "port_added",     "detail": "Port 443→8443 ajouté (api.acme.corp)" },
+    { "ts": "2025-04-24T22:01:45", "event": "tunnel_down",    "detail": "Tunnel wg-acme0 déconnecté" },
+    { "ts": "2025-04-24T18:30:00", "event": "port_removed",   "detail": "Port 3000→3000 supprimé (old-app)" },
+    { "ts": "2025-04-24T14:10:22", "event": "tunnel_up",      "detail": "Tunnel wg-acme0 connecté" },
+    { "ts": "2025-04-24T09:05:59", "event": "port_added",     "detail": "Port 80→8080 ajouté (app.acme.corp)" },
+    { "ts": "2025-04-23T20:44:31", "event": "tunnel_down",    "detail": "Tunnel wg-acme0 déconnecté" },
+    { "ts": "2025-04-23T10:00:00", "event": "tunnel_up",      "detail": "Tunnel wg-acme0 connecté" }
+  ]
+}

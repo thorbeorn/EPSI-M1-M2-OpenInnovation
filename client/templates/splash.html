@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WireGuard Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #080c10;
+    color: #e6edf3;
+    font-family: 'Syne', sans-serif;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .splash {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+
+  /* ── Anneaux ─────────────────────────────── */
+  .ring-wrap {
+    position: relative;
+    width: 90px;
+    height: 90px;
+  }
+
+  .ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2.5px solid #21262d;
+    border-top-color: #e6edf3;
+    animation: spin 0.9s linear infinite;
+  }
+
+  .ring-inner {
+    position: absolute;
+    inset: 16px;
+    border-radius: 50%;
+    border: 2px solid #21262d;
+    border-bottom-color: #8b949e;
+    animation: spin 1.4s linear infinite reverse;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* ── Texte ───────────────────────────────── */
+  .text-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .app-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #e6edf3;
+  }
+
+  .app-status {
+    font-size: 13px;
+    color: #484f58;
+    letter-spacing: 0.03em;
+  }
+
+  .dots span {
+    animation: blink 1.2s ease-in-out infinite;
+    opacity: 0;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0; }
+    50%       { opacity: 1; }
+  }
+
+  /* ── Version ─────────────────────────────── */
+  .version {
+    position: fixed;
+    bottom: 24px;
+    font-size: 11px;
+    color: #30363d;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="splash">
+  <div class="ring-wrap">
+    <div class="ring"></div>
+    <div class="ring-inner"></div>
+  </div>
+  <div class="text-block">
+    <div class="app-title">WireGuard Manager</div>
+    <div class="app-status">
+      Démarrage en cours<span class="dots"><span>.</span><span>.</span><span>.</span></span>
+    </div>
+  </div>
+</div>
+
+<div class="version">v0.1.0</div>
+
+</body>
+</html>
